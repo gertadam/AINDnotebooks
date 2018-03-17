@@ -1,0 +1,62 @@
+f8b70fe7bcce:/opt/conda/bin/python -u /opt/.pycharm_helpers/profiler/run_profiler.py 172.17.0.1 34873 /opt/project/AIND-P2-isolation/AIND-Isolation-master/tournament.py
+Starting cProfile profiler
+
+
+This script evaluates the performance of the custom_score evaluation
+function against a baseline agent using alpha-beta search and iterative
+deepening (ID) called `AB_Improved`. The three `AB_Custom` agents use
+ID and alpha-beta search with the custom_score functions defined in
+game_agent.py.
+
+                        *************************                         
+                             Playing Matches                              
+                        *************************                         
+
+ Match #   Opponent    AB_Improved   AB_Custom   AB_Custom_2  AB_Custom_3 
+                        Won | Lost   Won | Lost   Won | Lost   Won | Lost 
+    1       Random      66  |   4    65  |   5    67  |   3    64  |   6  
+    2       MM_Open     49  |  21    52  |  18    55  |  15    47  |  23  
+    3      MM_Center    62  |   8    63  |   7    65  |   5    59  |  11  
+    4     MM_Improved   48  |  22    51  |  19    48  |  22    44  |  26  
+    5       AB_Open     36  |  34    38  |  32    35  |  35    33  |  37  
+    6      AB_Center    39  |  31    39  |  31    38  |  32    36  |  34  
+    7     AB_Improved   39  |  31    35  |  35    36  |  34    31  |  39  
+--------------------------------------------------------------------------
+           Win Rate:      69.2%        70.0%        70.2%        64.1%    
+
+Snapshot saved to /tmp/notebooks.pstat
+Traceback (most recent call last):
+  File "/opt/.pycharm_helpers/profiler/run_profiler.py", line 173, in <module>
+    profiler.run(file)
+  File "/opt/.pycharm_helpers/profiler/run_profiler.py", line 92, in run
+    self.save_snapshot(0, generate_snapshot_filepath(base_snapshot_path, remote_run, self.snapshot_extension()), remote_run)
+  File "/opt/.pycharm_helpers/profiler/run_profiler.py", line 138, in save_snapshot
+    self.writer.addCommand(response)
+  File "/opt/.pycharm_helpers/profiler/prof_io.py", line 60, in addCommand
+    send_message(self.sock, message)
+  File "/opt/.pycharm_helpers/profiler/prof_io.py", line 16, in send_message
+    s = serialize(message, TBinaryProtocolFactory())
+  File "/opt/.pycharm_helpers/profiler/_prof_imports.py", line 26, in serialize
+    thrift_object.write(protocol)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/thrift.py", line 115, in write
+    oprot.write_struct(self)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 389, in write_struct
+    write_val(self.trans, TType.STRUCT, obj)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 159, in write_val
+    write_val(outbuf, f_type, v, f_container_spec)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 159, in write_val
+    write_val(outbuf, f_type, v, f_container_spec)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 125, in write_val
+    write_val(outbuf, e_type, e_val, t_spec)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 159, in write_val
+    write_val(outbuf, f_type, v, f_container_spec)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 159, in write_val
+    write_val(outbuf, f_type, v, f_container_spec)
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 103, in write_val
+    outbuf.write(pack_i32(val))
+  File "/opt/.pycharm_helpers/profiler/thriftpy/protocol/binary.py", line 27, in pack_i32
+    return struct.pack("!i", i32)
+struct.error: 'i' format requires -2147483648 <= number <= 2147483647
+
+Process finished with exit code 1
+
