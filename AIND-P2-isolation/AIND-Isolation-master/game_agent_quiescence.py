@@ -471,10 +471,42 @@ class AlphaBetaPlayer(IsolationPlayer):
         # Not able to submit -the udacity tester Fails when I use this
         # max_player_moves = len(blanks_list)/2
 
+        # Not able to submit -the udacity tester Fails when I use this
+        # let's assume that: the same returning best_move at 24 consecutive depth is enough for quiescence
+        bm = [(99, 99)]
+        initvalue = 99 - 1
+        initloc = (initvalue, initvalue)
+        # the first element is already in
+        for i in range(23):
+            bm.append(initloc)
+            initvalue -= 1
+            initloc = (initvalue, initvalue)
+
+        quiescent_range = 24
+
         #iterative deepening
         for depth in range(1, len(blanks_list)):
             try:
                 best_move = self.alphabeta(game, depth)
+
+                # Not able to submit -the udacity tester Fails when I use this
+                # recording the last 24 best_moves
+                if quiescent_range == 24:
+                    quiescent_range = 0
+                bm[quiescent_range] = best_move
+                quiescent_range += 1
+
+                # are they alike ?
+                Alike=True
+                for i in range(24):
+                    if best_move != bm[i]:
+                        Alike=False
+
+                # quiescence, 24 consecutive
+                if Alike:
+                    if Verbose:
+                        print("quiescence", bm)
+                    return best_move
 
             except SearchTimeout:
                 return best_move
