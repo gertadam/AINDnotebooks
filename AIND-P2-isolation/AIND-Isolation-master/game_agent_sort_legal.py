@@ -4,7 +4,7 @@ test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
 #from numba import jit
-Verbose = False
+Verbose = True
 
 
 class SearchTimeout(Exception):
@@ -36,43 +36,28 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # Com_1op_7k
-    p_loc = game.get_player_location(player)
-    if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
-        cl_value = 2000
-    else:
-        cl_value = -2000
-
-    # moves can tally up to 8
-    oppo_mov = float(len(game.get_legal_moves(game.get_opponent(player))))
+    # move_diff score
+    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
     my_moves = len(game.get_legal_moves(player))
+
     if oppo_mov == 0:
         return float("inf")
     if my_moves == 0:
         return float("-inf")
 
     if oppo_mov == 1:
-        return float(7000)
-    if my_moves == 1:
-        return float(-7000)
-
-    if oppo_mov == 2:
         return float(5000)
-    if my_moves == 2:
+    if my_moves == 1:
         return float(-5000)
 
-    mov_diff = ((my_moves - 1.6 * oppo_mov) * 1000)
-    value = cl_value + mov_diff
+    if oppo_mov == 2:
+        return float(500)
+    if my_moves == 2:
+        return float(-500)
 
-    # comparing values * multiplicators
-    # cl_value               values   (-2000) - (2000)
-    #
-    # we subtract oppo_mov
-    # - (in most cases there will be only a difference of 1-3)
-    # mov_diff               values   (-6000) - (6000)
+    move_diff = (my_moves - 1.6 * oppo_mov) * 20
 
-    return float(value)
-
+    return float(move_diff)
 
 
 
@@ -98,31 +83,8 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    '''# Move_diff score
-    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
-    my_moves = len(game.get_legal_moves(player))
+    # Combined_score
 
-    if oppo_mov == 0:
-        return float("inf")
-    if my_moves == 0:
-        return float("-inf")
-
-    if oppo_mov == 1:
-        return float(5000)
-    if my_moves == 1:
-        return float(-5000)
-
-    if oppo_mov == 2:
-        return float(500)
-    if my_moves == 2:
-        return float(-500)
-
-    move_diff = (my_moves - 1.6 * oppo_mov) * 20
-
-    return float(move_diff)
-    '''
-    # Com_1op_6k
-    p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = 2000
     else:
@@ -137,9 +99,9 @@ def custom_score_2(game, player):
         return float("-inf")
 
     if oppo_mov == 1:
-        return float(6000)
+        return float(10000)
     if my_moves == 1:
-        return float(-6000)
+        return float(-10000)
 
     if oppo_mov == 2:
         return float(5000)
@@ -182,7 +144,7 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    '''# in_or_out score
+    # in_or_out score
     blanks_list = game.get_blank_spaces()
     # counting up towards the final conclusion
     turn = (game.height*game.width)-len(blanks_list)
@@ -212,43 +174,7 @@ def custom_score_3(game, player):
     out_val = len(outside_area)*(1-turn_effect)   # *  0.9 0.8 0.7 0.6 0.5 0.4
 
     return float(cl_value+in_val+out_val)
-    '''
-    # Com_1op_5k
-    p_loc = game.get_player_location(player)
-    if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
-        cl_value = 2000
-    else:
-        cl_value = -2000
 
-    # moves can tally up to 8
-    oppo_mov = float(len(game.get_legal_moves(game.get_opponent(player))))
-    my_moves = len(game.get_legal_moves(player))
-    if oppo_mov == 0:
-        return float("inf")
-    if my_moves == 0:
-        return float("-inf")
-
-    if oppo_mov == 1:
-        return float(5000)
-    if my_moves == 1:
-        return float(-5000)
-
-    if oppo_mov == 2:
-        return float(5000)
-    if my_moves == 2:
-        return float(-5000)
-
-    mov_diff = ((my_moves - 1.6 * oppo_mov) * 1000)
-    value = cl_value + mov_diff
-
-    # comparing values * multiplicators
-    # cl_value               values   (-2000) - (2000)
-    #
-    # we subtract oppo_mov
-    # - (in most cases there will be only a difference of 1-3)
-    # mov_diff               values   (-6000) - (6000)
-
-    return float(value)
 
 
 class IsolationPlayer:
@@ -494,6 +420,9 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         blanks_list = game.get_blank_spaces()
 
+        # Not able to submit -the udacity tester Fails when I use this
+        # max_player_moves = len(blanks_list)/2
+
         #iterative deepening
         for depth in range(1, len(blanks_list)):
             try:
@@ -503,6 +432,7 @@ class AlphaBetaPlayer(IsolationPlayer):
                 return best_move
         return best_move
 
+#    @jit(nopython=True, parallel=True)
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
         described in the lectures.
@@ -554,23 +484,128 @@ class AlphaBetaPlayer(IsolationPlayer):
         # initializations
         IsMax_value = True
 
+        # Not able to submit -the udacity tester Fails when I use this
+        # Extended_depth = False
+        # max_branch, move = self.next_node(game, depth, alpha, beta, IsMax_value, Extended_depth)
 
         max_branch, move = self.next_node(game, depth, alpha, beta, IsMax_value)
 
         return move
 
 
+
+    # @jit(nopython=True, parallel=True)
+    # Not able to submit -the udacity tester Fails when I use this
+    # def next_node(self, gameState, depth, alpha, beta, IsMax_value, Extended_depth):
+
     def next_node(self, gameState, depth, alpha, beta, IsMax_value):
-        self.time_test()
+
+        def sort_legal_list(legal_list, blanks_list):
+            # we want to be in an area with many blanks, so look at them first
+            self.time_test()
+            tmp_legal_list = []
+            loc_blanks = []
+            values_written_list = []
+            for loc in legal_list:
+                blanks_in_box = []
+                boxsize = 2
+                min_r = loc[0] - boxsize
+                min_c = loc[1] - boxsize
+                max_r = loc[0] + boxsize
+                max_c = loc[1] + boxsize
+                for blank in blanks_list:
+                    if min_r <= blank[0] <= max_r and min_c <= blank[1] <= max_c:
+                        blanks_in_box.append(blank)
+                # loc_blanks 0 - 24
+                loc_blanks.append(len(blanks_in_box))
+            if Verbose :
+                    print("loc_blanks", loc_blanks)
+            for counter in range(len(loc_blanks)):
+                if Verbose:
+                    print("for counter in range counter-1:", counter)
+                    print("for counter in range len(tmp_legal_list):", len(tmp_legal_list))
+                    print("for counter in range legal_list[counter]:", legal_list[counter])
+                    print("for counter in range loc_blanks[counter]:", loc_blanks[counter])
+                if len(tmp_legal_list) == 0:
+                    tmp_legal_list.append(legal_list[counter])
+                    values_written_list.append(loc_blanks[counter])
+                else:
+                    #first element in enumerate is 0
+                    max_z = len(tmp_legal_list)
+                    if Verbose:
+                        print("else: tmp_legal_list:", tmp_legal_list)
+                        print("else: values_written_list:", values_written_list)
+                        print("else: max_z:", max_z)
+
+                    for z in range(max_z):
+                        if Verbose:
+                            print("efter for, tmp_legal_list:", tmp_legal_list)
+                            print("efter for, values_written_list:", values_written_list)
+                            print("efter for, max_z:", max_z)
+                            print("efter for, z:", z)
+                        if z == max_z:
+                            tmp_legal_list.append(legal_list[counter])
+                            values_written_list.append(loc_blanks[counter])
+                            if Verbose:
+                                print("if z+1 == max_z: tmp_legal_list:", tmp_legal_list)
+                                print("if z+1 == max_z: values_written_list:", values_written_list)
+                                print("if z+1 == max_z: max_z:", max_z)
+                                print("if z+1 == max_z: z:", z)
+                        elif values_written_list[z] <= loc_blanks[counter]:
+                            tmp_legal_list.insert(z, legal_list[counter])
+                            values_written_list.insert(z, loc_blanks[counter])
+                        if Verbose:
+                            print("elif values_written_list[z] tmp_legal_list:", tmp_legal_list)
+                            print("elif values_written_list[z] values_written_list:", values_written_list)
+                            print("elif values_written_list[z] max_z:", max_z)
+                            print("elif values_written_list[z] z:", z)
+                    if Verbose:
+                        print("tmp_legal_list:", tmp_legal_list)
+                        print("values_written_list:", values_written_list)
+                        print("max_z:", max_z)
+
+                if Verbose:
+                    print("values_written_list", values_written_list)
+                    print("tmp_legal_list:", tmp_legal_list)
+                if Verbose:
+                    print("tmp_legal_list:", tmp_legal_list)
+                    print("values_written_list:", values_written_list)
+
+
+            return tmp_legal_list
+
+        blanks_list = gameState.get_blank_spaces()
         legal_list = gameState.get_legal_moves()
         legal_moves = len(legal_list)
+        if Verbose:
+            print("legal_moves:", legal_moves)
 
+        self.time_test()
+
+        # Not able to submit -the udacity tester Fails when I use this
+        #if Verbose:
+        #    if depth == 3:
+        #        print("depth3 - legal:", legal_moves)
+        #    if Extended_depth:
+        #        print("Extended")
+
+        #if (legal_moves == 3) and (depth == 3) and (not Extended_depth):
+        #    depth = 6
+        #    Extended_depth = True
+        #    if Verbose:
+        #        print("Extended")
 
         if legal_moves == 0:
             if IsMax_value:
                 return float("-inf"), (-1, -1)
             else:
                 return float("inf"), (-1, -1)
+
+        if (1 < legal_moves < 9):
+            if Verbose:
+                print("1-8legal_list:", legal_list )
+            legal_list = sort_legal_list(legal_list, blanks_list)
+
         #init
         move_for_v = legal_list[0]
 
@@ -589,6 +624,9 @@ class AlphaBetaPlayer(IsolationPlayer):
             return self.score(gameState, self), move_for_v
 
         for m in legal_list:
+            # Not able to submit -the udacity tester Fails when I use this
+            #node_value, node_move = self.next_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_value, Extended_depth)
+
             node_value, node_move = self.next_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_value)
 
             if IsMax_value:

@@ -22,21 +22,63 @@ from sample_players import (RandomPlayer, open_move_score,
                             improved_score, center_score)
 from game_agent import (MinimaxPlayer, AlphaBetaPlayer, custom_score,
                         custom_score_2, custom_score_3)
+import multiprocessing
+import time
+import sys
+
+import thread
 
 
-NUM_MATCHES = 25  # number of matches against each opponent
+
+NUM_MATCHES =  2  # number of matches against each opponent
 TIME_LIMIT = 150  # number of milliseconds before timeout
 
-DESCRIPTION = """
-This script evaluates the performance of the custom_score evaluation
-function against a baseline agent using alpha-beta search and iterative
-deepening (ID) called `AB_Improved`. The three `AB_Custom` agents use
-ID and alpha-beta search with the custom_score functions defined in
-game_agent.py.
-"""
+DESCRIPTION = """ This script evaluates the performance of the custom_score 
+evaluation function against a baseline agent using alpha-beta search and 
+iterative deepening (ID) called `AB_Improved`. 
+The three `AB_Custom` agents use ID and alpha-beta search with the 
+custom_score functions defined in game_agent.py. """
 
 Agent = namedtuple("Agent", ["player", "name"])
 
+#        _start = time.time()
+#         t_sec = round(time.time() - _start)
+#        (t_min, t_sec) = divmod(t_sec, 60)
+#        (t_hour, t_min) = divmod(t_min, 60)
+#        print('Time passed(play_round): {}hour:{}min:{}sec'.format(t_hour, t_min, t_sec))
+
+def play_it(game):
+    """
+
+    File "/opt/project/AIND-P2-isolation/AIND-Isolation-master/Multi_tournament.py",
+    - line 65, in pooling game
+
+    File "/opt/conda/lib/python3.5/multiprocessing/pool.py", line 266, in map
+    - return self._map_async(func, iterable, mapstar, chunksize).get()
+
+    File "/opt/conda/lib/python3.5/multiprocessing/pool.py",
+    - line 376, in _map_async  -     iterable = list(iterable)
+    TypeError: 'Board' object is not iterable
+
+    Process finished with exit code 1
+
+    """
+    winner, _, termination=game.play(time_limit=TIME_LIMIT)
+    return winner, _, termination
+
+def pooling(game):
+    pool_size = multiprocessing.cpu_count() * 2
+    pool = multiprocessing.Pool(processes=pool_size,
+                                initializer=start_process,
+                                maxtasksperchild=2,
+                                )
+    winner, _, termination = pool.map(play_it, 
+                                      game
+                                      )
+    pool.close()  # no more tasks
+    pool.join()  # wrap up current tasks
+
+    return winner, _, termination
 
 def play_round(cpu_agent, test_agents, win_counts, num_matches):
     """Compare the test agents to the cpu agent in "fair" matches.
@@ -61,7 +103,7 @@ def play_round(cpu_agent, test_agents, win_counts, num_matches):
 
         # play all games and tally the results
         for game in games:
-            winner, _, termination = game.play(time_limit=TIME_LIMIT)
+            winner, _, termination = pooling(game)
             win_counts[winner] += 1
 
             if termination == "timeout":
@@ -71,6 +113,8 @@ def play_round(cpu_agent, test_agents, win_counts, num_matches):
 
     return timeout_count, forfeit_count
 
+def start_process():
+    print ('Starting', multiprocessing.current_process().name)
 
 def update(total_wins, wins):
     for player in total_wins:
@@ -131,9 +175,9 @@ def main():
     # starting position against the same adversaries in the tournament
     test_agents = [
         Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score), "Com_1op_7k"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_2), "Com_1op_6k"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_3), "Com_1op_5k")
+        Agent(AlphaBetaPlayer(score_fn=custom_score), "Combined_sc"),
+        Agent(AlphaBetaPlayer(score_fn=custom_score_2), "Move_diff sc"),
+        Agent(AlphaBetaPlayer(score_fn=custom_score_3), "in_or_out sc")
     ]
 
     # Define a collection of agents to compete against the test agents
