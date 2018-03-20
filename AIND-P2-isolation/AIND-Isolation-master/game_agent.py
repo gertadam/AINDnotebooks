@@ -3,7 +3,6 @@ Finish all TODO items in this file to complete the isolation project, then
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
-# from numba import jit
 Verbose = False
 
 
@@ -58,7 +57,7 @@ def custom_score(game, player):
     else:
         cl_value = move_num * -20
 
-    state_value = move_num
+    state_value = move_num + cl_value
 
     return float(state_value)
 
