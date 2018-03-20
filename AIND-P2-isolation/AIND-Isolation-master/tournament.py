@@ -131,9 +131,9 @@ def main():
     # starting position against the same adversaries in the tournament
     test_agents = [
         Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score), "Com_diff*1500"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_2), "Com_diff*900"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_3), "Com_diff*700")
+        Agent(AlphaBetaPlayer(score_fn=custom_score), "Com_move_count*10k"),
+        Agent(AlphaBetaPlayer(score_fn=custom_score_2), "Com_move_count*1k"),
+        Agent(AlphaBetaPlayer(score_fn=custom_score_3), "Com_move_count*100")
     ]
 
     # Define a collection of agents to compete against the test agents

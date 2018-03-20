@@ -36,7 +36,9 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # Com_diff*1500
+    # Com_move_count*10000
+    move_num_weight = game.move_count*10000
+
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = 2000
@@ -61,8 +63,9 @@ def custom_score(game, player):
     if my_moves == 2:
         return float(-2000)
 
-    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1500)
-    value = cl_value + mov_diff
+    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1200)
+
+    value = cl_value + mov_diff + move_num_weight
 
     return float(value)
 
@@ -114,7 +117,9 @@ def custom_score_2(game, player):
 
     return float(move_diff)
     '''
-    # Com_diff*900
+    # Com_move_count*1000
+    move_num_weight = game.move_count * 1000
+
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = 2000
@@ -139,15 +144,9 @@ def custom_score_2(game, player):
     if my_moves == 2:
         return float(-2000)
 
-    mov_diff = ((my_moves - 1.73 * oppo_mov) * 900)
-    value = cl_value + mov_diff
+    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1200)
 
-    # comparing values * multiplicators
-    # cl_value               values   (-2000) - (2000)
-    #
-    # we subtract oppo_mov
-    # - (in most cases there will be only a difference of 1-3)
-    # mov_diff               values   (-6000) - (6000)
+    value = cl_value + mov_diff + move_num_weight
 
     return float(value)
 
@@ -206,7 +205,8 @@ def custom_score_3(game, player):
 
     return float(cl_value+in_val+out_val)
     '''
-    # Com_diff*700
+    # Com_move_count*100
+    move_num_weight = game.move_count * 100
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = 2000
@@ -231,15 +231,9 @@ def custom_score_3(game, player):
     if my_moves == 2:
         return float(-2000)
 
-    mov_diff = ((my_moves - 1.73 * oppo_mov) * 700)
-    value = cl_value + mov_diff
+    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1200)
 
-    # comparing values * multiplicators
-    # cl_value               values   (-2000) - (2000)
-    #
-    # we subtract oppo_mov
-    # - (in most cases there will be only a difference of 1-3)
-    # mov_diff               values   (-6000) - (6000)
+    value = cl_value + mov_diff + move_num_weight
 
     return float(value)
 
