@@ -3,7 +3,7 @@ Finish all TODO items in this file to complete the isolation project, then
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
-#from numba import jit
+# from numba import jit
 Verbose = False
 
 
@@ -36,40 +36,31 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # Com_move_count*10000
-    move_num_weight = game.move_count*10000
+    # little simple
+    """
+    game.utility returns the utility of the current game state from the perspective
+    of the specified player.
 
+                /  +infinity,   "player" wins
+    utility =  |   -infinity,   "player" loses
+                \          0,    otherwise
+    """
+    util = game.utility(player)
+    if not (util == 0):
+        return util
+
+    move_num = game.move_count * 10000
+
+    # we prefer to be in the center.. until we cannot
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
-        cl_value = 2000
+        cl_value = move_num * 20
     else:
-        cl_value = -2000
+        cl_value = move_num * -20
 
-    # moves can tally up to 8
-    oppo_mov = float(len(game.get_legal_moves(game.get_opponent(player))))
-    my_moves = len(game.get_legal_moves(player))
-    if oppo_mov == 0:
-        return float("inf")
-    if my_moves == 0:
-        return float("-inf")
+    state_value = move_num
 
-    if oppo_mov == 1:
-        return float(4000)
-    if my_moves == 1:
-        return float(-4000)
-
-    if oppo_mov == 2:
-        return float(2000)
-    if my_moves == 2:
-        return float(-2000)
-
-    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1200)
-
-    value = cl_value + mov_diff + move_num_weight
-
-    return float(value)
-
-
+    return float(state_value)
 
 
 def custom_score_2(game, player):
@@ -117,36 +108,16 @@ def custom_score_2(game, player):
 
     return float(move_diff)
     '''
-    # Com_move_count*1000
-    move_num_weight = game.move_count * 1000
+    # Com_move_count*100 cl* 20 / -20
+    move_num = game.move_count
 
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
-        cl_value = 2000
+        cl_value = move_num * 20
     else:
-        cl_value = -2000
+        cl_value = move_num * -20
 
-    # moves can tally up to 8
-    oppo_mov = float(len(game.get_legal_moves(game.get_opponent(player))))
-    my_moves = len(game.get_legal_moves(player))
-    if oppo_mov == 0:
-        return float("inf")
-    if my_moves == 0:
-        return float("-inf")
-
-    if oppo_mov == 1:
-        return float(4000)
-    if my_moves == 1:
-        return float(-4000)
-
-    if oppo_mov == 2:
-        return float(2000)
-    if my_moves == 2:
-        return float(-2000)
-
-    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1200)
-
-    value = cl_value + mov_diff + move_num_weight
+    value = cl_value + move_num * 100
 
     return float(value)
 
@@ -205,35 +176,30 @@ def custom_score_3(game, player):
 
     return float(cl_value+in_val+out_val)
     '''
-    # Com_move_count*100
-    move_num_weight = game.move_count * 100
-    p_loc = game.get_player_location(player)
-    if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
-        cl_value = 2000
-    else:
-        cl_value = -2000
+
+    # count+_diff
+    move_num_weight = game.move_count * 10000
 
     # moves can tally up to 8
     oppo_mov = float(len(game.get_legal_moves(game.get_opponent(player))))
-    my_moves = len(game.get_legal_moves(player))
     if oppo_mov == 0:
         return float("inf")
+    elif oppo_mov == 1:
+        return float(4000)
+    elif oppo_mov == 2:
+        return float(2000)
+
+    my_moves = len(game.get_legal_moves(player))
     if my_moves == 0:
         return float("-inf")
-
-    if oppo_mov == 1:
-        return float(4000)
-    if my_moves == 1:
+    elif my_moves == 1:
         return float(-4000)
-
-    if oppo_mov == 2:
-        return float(2000)
-    if my_moves == 2:
+    elif my_moves == 2:
         return float(-2000)
 
     mov_diff = ((my_moves - 1.73 * oppo_mov) * 1200)
 
-    value = cl_value + mov_diff + move_num_weight
+    value = mov_diff + move_num_weight
 
     return float(value)
 
@@ -312,7 +278,7 @@ class MinimaxPlayer(IsolationPlayer):
 
         if len(legal) == 0:
             return (-1, -1)
-        #init
+        # init
         best_move = legal[0]
 
         try:
@@ -365,14 +331,14 @@ class MinimaxPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
-        #minimax decision main
+        # minimax decision main
         self.time_test()
 
         legal = game.get_legal_moves()
 
         if len(legal) == 0:
             return (-1, -1)
-        #init
+        # init
         best_move = legal[0]
 
         best_score = float("-inf")
@@ -470,18 +436,22 @@ class AlphaBetaPlayer(IsolationPlayer):
         """
         self.time_left = time_left
         legal_list = game.get_legal_moves()
+        num_legal = len(legal_list)
+
         if Verbose:
             print("legal_list:", legal_list)
 
-        if len(legal_list) == 0:
+        if num_legal == 0:
             return (-1, -1)
+        elif num_legal == 1:
+            return legal_list[0]
 
-        #init
+        # init
         best_move = legal_list[0]
 
         blanks_list = game.get_blank_spaces()
 
-        #iterative deepening
+        # iterative deepening
         for depth in range(1, len(blanks_list)):
             try:
                 best_move = self.alphabeta(game, depth)
@@ -541,24 +511,21 @@ class AlphaBetaPlayer(IsolationPlayer):
         # initializations
         IsMax_value = True
 
-
         max_branch, move = self.next_node(game, depth, alpha, beta, IsMax_value)
 
         return move
-
 
     def next_node(self, gameState, depth, alpha, beta, IsMax_value):
         self.time_test()
         legal_list = gameState.get_legal_moves()
         legal_moves = len(legal_list)
 
-
         if legal_moves == 0:
             if IsMax_value:
                 return float("-inf"), (-1, -1)
             else:
                 return float("inf"), (-1, -1)
-        #init
+        # init
         move_for_v = legal_list[0]
 
         if IsMax_value:
@@ -570,9 +537,11 @@ class AlphaBetaPlayer(IsolationPlayer):
             if IsMax_value:
                 return float("-inf"), move_for_v  # by assumption 2
             else:
-                return float("inf"), move_for_v   # by assumption 2
+                return float("inf"), move_for_v  # by assumption 2
 
-        if depth == 0:
+        if depth == 0 or legal_moves == 1:
+            if Verbose:
+                print("move#:", gameState.move_count)
             return self.score(gameState, self), move_for_v
 
         for m in legal_list:
@@ -598,7 +567,6 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         return v, move_for_v
 
-
     def terminal_test(self, gamestate):
         moves_available = bool(gamestate.get_legal_moves())  # by Assumption 1
         return not moves_available
@@ -608,4 +576,3 @@ class AlphaBetaPlayer(IsolationPlayer):
             if Verbose:
                 print("Timeout")
             raise SearchTimeout()
-

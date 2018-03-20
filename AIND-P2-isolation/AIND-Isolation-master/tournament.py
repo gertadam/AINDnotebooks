@@ -12,9 +12,9 @@ once as the second player.  Randomizing the openings and switching the player
 order corrects for imbalances due to both starting position and initiative.
 """
 import itertools
-import random
 import warnings
 
+import random
 from collections import namedtuple
 
 from isolation import Board
@@ -24,7 +24,7 @@ from game_agent import (MinimaxPlayer, AlphaBetaPlayer, custom_score,
                         custom_score_2, custom_score_3)
 
 
-NUM_MATCHES = 20  # number of matches against each opponent
+NUM_MATCHES = 5  # number of matches against each opponent
 TIME_LIMIT  = 150  # number of milliseconds before timeout
 
 DESCRIPTION = """
@@ -131,9 +131,9 @@ def main():
     # starting position against the same adversaries in the tournament
     test_agents = [
         Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score), "Com_move_count*10k"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_2), "Com_move_count*1k"),
-        Agent(AlphaBetaPlayer(score_fn=custom_score_3), "Com_move_count*100")
+        Agent(AlphaBetaPlayer(score_fn=custom_score), "count only"),
+        Agent(AlphaBetaPlayer(score_fn=custom_score_2), "count + cl"),
+        Agent(AlphaBetaPlayer(score_fn=custom_score_3), "count + diff")
     ]
 
     # Define a collection of agents to compete against the test agents

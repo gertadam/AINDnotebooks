@@ -5,12 +5,10 @@ cases used by the project assistant are not public.
 
 import unittest
 import timeit
-TIME_LIMIT_MILLIS = 150
-
 import isolation
 import game_agent
-
 from importlib import reload
+TIME_LIMIT_MILLIS = 150
 
 
 class IsolationTest(unittest.TestCase):
@@ -38,7 +36,7 @@ class IsolationTest(unittest.TestCase):
         print("---------- testing alpha beta player ----------")
         self.player1 = game_agent.AlphaBetaPlayer()
         self.player2 = game_agent.AlphaBetaPlayer()
-        self.game = isolation.Board(self.player1, self.player2, 8, 8)
+        self.game = isolation.Board(self.player1, self.player2, 12, 12)
 
             
         time_millis = lambda: 1000 * timeit.default_timer()
@@ -55,6 +53,7 @@ class IsolationTest(unittest.TestCase):
             self.game.apply_move(move)
             print(self.game.print_board())
             if move == (-1, -1):
+                print("dead-end ")
                 break
 
 
