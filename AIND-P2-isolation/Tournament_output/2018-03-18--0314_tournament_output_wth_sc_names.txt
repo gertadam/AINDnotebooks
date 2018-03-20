@@ -1,0 +1,32 @@
+/home/gert/Desktop/notebooks/AIND-P2-isolation/Tournament_output/
+2018-03-18--0314_tournament_output_wth_sc_names.txt
+
+root@80e8767fac2a:/notebooks/AIND-P2-isolation/AIND-Isolation-master
+
+# python tournament.py  
+
+This script evaluates the performance of the custom_score evaluation
+function against a baseline agent using alpha-beta search and iterative
+deepening (ID) called `AB_Improved`. The three `AB_Custom` agents use
+ID and alpha-beta search with the custom_score functions defined in
+game_agent.py.
+
+                        *************************                         
+                             Playing Matches                              
+                        *************************                         
+
+ Match #   Opponent    AB_Improved  Combined_sc Move_diff sc in_or_out sc 
+                        Won | Lost   Won | Lost   Won | Lost   Won | Lost 
+    1       Random      19  |   1    20  |   0    17  |   3    17  |   3  
+    2       MM_Open     16  |   4    18  |   2    11  |   9    10  |  10  
+    3      MM_Center    18  |   2    20  |   0    18  |   2    15  |   5  
+    4     MM_Improved   15  |   5    14  |   6    14  |   6    14  |   6  
+    5       AB_Open     10  |  10    13  |   7     8  |  12     8  |  12  
+    6      AB_Center    13  |   7    12  |   8    13  |   7    10  |  10  
+    7     AB_Improved   10  |  10     8  |  12    10  |  10     7  |  13  
+--------------------------------------------------------------------------
+           Win Rate:      72.1%        75.0%        65.0%        57.9%    
+
+
+Process finished with exit code 0
+

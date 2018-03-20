@@ -1,0 +1,32 @@
+/home/gert/Desktop/notebooks/AIND-P2-isolation/Tournament_output/2018-03-14--1218_overnight_tournament_output.txt
+
+b9ac6f2c7edc:/opt/conda/bin/python -u /opt/.pycharm_helpers/profiler/run_profiler.py 172.17.0.1 42375 /opt/project/AIND-P2-isolation/AIND-Isolation-master/tournament.py
+Starting cProfile profiler
+
+
+This script evaluates the performance of the custom_score evaluation
+function against a baseline agent using alpha-beta search and iterative
+deepening (ID) called `AB_Improved`. The three `AB_Custom` agents use
+ID and alpha-beta search with the custom_score functions defined in
+game_agent.py.
+
+                        *************************                         
+                             Playing Matches                              
+                        *************************
+  -My score-"name"                   Combined      Move-diff     in-out
+
+ Match #   Opponent    AB_Improved   AB_Custom   AB_Custom_2  AB_Custom_3 
+                        Won | Lost   Won | Lost   Won | Lost   Won | Lost 
+    1       Random      45  |   5    45  |   5    45  |   5    47  |   3  
+    2       MM_Open     38  |  12    32  |  18    36  |  14    35  |  15  
+    3      MM_Center    42  |   8    40  |  10    45  |   5    40  |  10  
+    4     MM_Improved   33  |  17    36  |  14    37  |  13    35  |  15  
+    5       AB_Open     24  |  26    22  |  28    30  |  20    24  |  26  
+    6      AB_Center    24  |  26    32  |  18    32  |  18    27  |  23  
+    7     AB_Improved   25  |  25    22  |  28    28  |  22    23  |  27  
+--------------------------------------------------------------------------
+           Win Rate:      66.0%        65.4%        72.3%        66.0%    
+Snapshot saved to /tmp/notebooks.pstat
+
+Process finished with exit code 0
+
