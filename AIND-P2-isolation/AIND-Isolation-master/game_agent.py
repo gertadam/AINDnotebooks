@@ -36,7 +36,7 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # Com_1op_7k
+    # Com_diff*1500
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = 2000
@@ -52,24 +52,17 @@ def custom_score(game, player):
         return float("-inf")
 
     if oppo_mov == 1:
-        return float(7000)
+        return float(4000)
     if my_moves == 1:
-        return float(-7000)
+        return float(-4000)
 
     if oppo_mov == 2:
-        return float(5000)
+        return float(2000)
     if my_moves == 2:
-        return float(-5000)
+        return float(-2000)
 
-    mov_diff = ((my_moves - 1.6 * oppo_mov) * 1000)
+    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1500)
     value = cl_value + mov_diff
-
-    # comparing values * multiplicators
-    # cl_value               values   (-2000) - (2000)
-    #
-    # we subtract oppo_mov
-    # - (in most cases there will be only a difference of 1-3)
-    # mov_diff               values   (-6000) - (6000)
 
     return float(value)
 
@@ -121,7 +114,7 @@ def custom_score_2(game, player):
 
     return float(move_diff)
     '''
-    # Com_1op_6k
+    # Com_diff*900
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = 2000
@@ -137,16 +130,16 @@ def custom_score_2(game, player):
         return float("-inf")
 
     if oppo_mov == 1:
-        return float(6000)
+        return float(4000)
     if my_moves == 1:
-        return float(-6000)
+        return float(-4000)
 
     if oppo_mov == 2:
-        return float(5000)
+        return float(2000)
     if my_moves == 2:
-        return float(-5000)
+        return float(-2000)
 
-    mov_diff = ((my_moves - 1.6 * oppo_mov) * 1000)
+    mov_diff = ((my_moves - 1.73 * oppo_mov) * 900)
     value = cl_value + mov_diff
 
     # comparing values * multiplicators
@@ -213,7 +206,7 @@ def custom_score_3(game, player):
 
     return float(cl_value+in_val+out_val)
     '''
-    # Com_1op_5k
+    # Com_diff*700
     p_loc = game.get_player_location(player)
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = 2000
@@ -229,16 +222,16 @@ def custom_score_3(game, player):
         return float("-inf")
 
     if oppo_mov == 1:
-        return float(5000)
+        return float(4000)
     if my_moves == 1:
-        return float(-5000)
+        return float(-4000)
 
     if oppo_mov == 2:
-        return float(5000)
+        return float(2000)
     if my_moves == 2:
-        return float(-5000)
+        return float(-2000)
 
-    mov_diff = ((my_moves - 1.6 * oppo_mov) * 1000)
+    mov_diff = ((my_moves - 1.73 * oppo_mov) * 700)
     value = cl_value + mov_diff
 
     # comparing values * multiplicators
