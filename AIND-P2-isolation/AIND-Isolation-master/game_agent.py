@@ -46,8 +46,8 @@ def custom_score(game, player):
     move_num = game.move_count
 
     # we prefer to be in the center.. until we cannot
-    p_loc = game.get_player_location(player)
-    if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
+    cur_loc = game.get_player_location(player)
+    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
         cl_value = move_num * 20
     else:
         cl_value = move_num * -20
@@ -76,15 +76,15 @@ def custom_score(game, player):
         print("blanks_count", blanks_count)
 
     bl_multi = 0
-    if p_loc[0] <= center_h-1:
-        if p_loc[1] <= center_w-1:
+    if cur_loc[0] <= center_h-1:
+        if cur_loc[1] <= center_w-1:
             bl_multi = blanks_count[0]
-        elif p_loc[1] >= width-center_w:
+        elif cur_loc[1] >= width-center_w:
             bl_multi = blanks_count[1]
-    elif p_loc[0] >= height-center_h:
-        if p_loc[1] <= center_w-1:
+    elif cur_loc[0] >= height-center_h:
+        if cur_loc[1] <= center_w-1:
             bl_multi = blanks_count[2]
-        elif p_loc[1] >= width-center_w:
+        elif cur_loc[1] >= width-center_w:
             bl_multi = blanks_count[3]
 
     state_value = move_num * 1000 + cl_value + bl_multi * 1000
@@ -147,9 +147,9 @@ def custom_score_2(game, player):
     move_num = game.move_count * 1000
 
     # staying away from the edges - becomes ever more important. Hence multiplied by move_num
-    p_loc = game.get_player_location(player)
+    cur_loc = game.get_player_location(player)
     # current location inside inner box
-    if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
+    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
         cl_value = move_num * 20
     else:
         # current location along the board edges
@@ -218,19 +218,8 @@ def custom_score_3(game, player):
 
     mov_diff_value = ((my_moves - 1.73 * oppo_mov) * 1200)
 
-    move_num_weight = game.move_count * 1000
-
-    # keep inside the middle
-    cur_loc = game.get_player_location(player)
-    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = 100
-    else:
-        cl_value = -100
-
-    blanks_list = game.get_blank_spaces()
     # counting up towards the final conclusion
-    turn = game.move_count
-    turn_effect = turn * 0.1                 # the "speed" of the effect based on move_num
+    turn_effect = game.move_count * 0.1                 # the "speed" of the effect based on move_num
 
     in_area      = []
     outside_area = []
@@ -242,18 +231,17 @@ def custom_score_3(game, player):
         else:
             outside_area.append(in_out)    # can only be 1-4
 
-    in_val  = len(in_area)*turn_effect            # *  0.1 0.2 0.3 ...
+    in_val  = len(in_area)*turn_effect              # *  0.1 0.2 0.3 ...
 
-    # the longer we play the move we want to avoid getting "trapped" outside
-    out_val = len(outside_area)*(2-turn_effect)   # *  1.9 1.8 1.7 ...
+    # the longer we play the game - the more -
+    # we want to avoid having to risk getting "trapped" outside
+    # out has -by far- the best score to start with
+    # after 15 turns - they switch - af 30 out goes negative
+    out_val = len(outside_area)*(3-turn_effect)     # *  2.9 2.8 2.7 ...
 
-    state_value = mov_diff_value + move_num_weight + cl_value + in_val + out_val
+    state_value = mov_diff_value + in_val + out_val
     return float(state_value)
 
-
-    value = mov_diff_value + move_num_weight
-
-    return float(value)
 
 
 
