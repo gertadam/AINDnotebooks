@@ -245,7 +245,7 @@ class Board(object):
             if player == self._active_player:
                 return float("-inf")
 
-        return 0.
+        return 0
 
     def __get_moves(self, loc):
         """Generate the list of possible moves for an L-shaped motion (like a

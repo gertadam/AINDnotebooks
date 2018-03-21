@@ -3,7 +3,7 @@ Finish all TODO items in this file to complete the isolation project, then
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
-Verbose = False
+Verbose = True
 
 
 class SearchTimeout(Exception):
@@ -35,18 +35,12 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # little simple
-    """
-    game.utility returns the utility of the current game state from the perspective
-    of the specified player.
 
-                /  +infinity,   "player" wins
-    utility =  |   -infinity,   "player" loses
-                \          0,    otherwise
-    """
-    util = game.utility(player)
-    if not (util == 0):
-        return util
+    # simple
+    if game.is_loser(player):
+        return float("-inf")
+    elif game.is_winner(player):
+        return float("inf")
 
     move_num = game.move_count * 10000
 
@@ -107,18 +101,26 @@ def custom_score_2(game, player):
 
     return float(move_diff)
     '''
-    # Com_move_count*100 cl* 20 / -20
-    move_num = game.move_count
 
+    # mov#+centrloc
+    if game.is_loser(player):
+        return float("-inf")
+    elif game.is_winner(player):
+        return float("inf")
+
+    move_num = game.move_count
+    # staying away from the edges - becomes ever more important. Hence multiplied by move_num
     p_loc = game.get_player_location(player)
+        # current location inside inner box
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = move_num * 20
     else:
+        # current location along the board edges
         cl_value = move_num * -20
 
-    value = cl_value + move_num * 100
+    state_value = cl_value + move_num * 100
 
-    return float(value)
+    return float(state_value)
 
 
 def custom_score_3(game, player):
@@ -143,55 +145,60 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-
-    '''# in_or_out score
-    blanks_list = game.get_blank_spaces()
-    # counting up towards the final conclusion
-    turn = (game.height*game.width)-len(blanks_list)
-    turn_effect = turn * 0.1       # how much effect
-
-    # keep inside the middle
-    cur_loc = game.get_player_location(player)
-    if 1 <= cur_loc[0] <= game.height-2 and 1 <= cur_loc[1] <= game.width-2:
-        cl_value=100
-    else:
-        cl_value=-100
-
-
-    in_area      = []
-    outside_area = []
-    # how many next moves are in the center
-    legal_list = game.get_legal_moves()
-    for in_out in legal_list:
-        if 1 <= in_out[0] <= game.height-2 and 1 <= in_out[1] <= game.width-2:
-            in_area.append(in_out)         # could be 1-8
-        else:
-            outside_area.append(in_out)    # can only be 1-4
-
-    in_val  = len(in_area)*turn_effect            # *  0.1 0.2 0.3 0.4 0.5 0.6
-
-    # the longer we play the move we want to avoid getting "trapped" outside
-    out_val = len(outside_area)*(1-turn_effect)   # *  0.9 0.8 0.7 0.6 0.5 0.4
-
-    return float(cl_value+in_val+out_val)
-    '''
+    # # in_or_out score
+    # blanks_list = game.get_blank_spaces()
+    # # counting up towards the final conclusion
+    # turn = (game.height*game.width)-len(blanks_list)
+    # turn_effect = turn * 0.1       # how much effect
+    #
+    # # keep inside the middle
+    # cur_loc = game.get_player_location(player)
+    # if 1 <= cur_loc[0] <= game.height-2 and 1 <= cur_loc[1] <= game.width-2:
+    #     cl_value=100
+    # else:
+    #     cl_value=-100
+    #
+    # in_area      = []
+    # outside_area = []
+    # # how many next moves are in the center
+    # legal_list = game.get_legal_moves()
+    # for in_out in legal_list:
+    #     if 1 <= in_out[0] <= game.height-2 and 1 <= in_out[1] <= game.width-2:
+    #         in_area.append(in_out)         # could be 1-8
+    #     else:
+    #         outside_area.append(in_out)    # can only be 1-4
+    #
+    # in_val  = len(in_area)*turn_effect            # *  0.1 0.2 0.3 0.4 0.5 0.6
+    #
+    # # the longer we play the move we want to avoid getting "trapped" outside
+    # out_val = len(outside_area)*(1-turn_effect)   # *  0.9 0.8 0.7 0.6 0.5 0.4
+    #
+    # return float(cl_value+in_val+out_val)
 
     # count+_diff
+
+    # game.utility returns the utility of the current game state from the perspective
+    # of the specified player.
+    #
+    #             /  +infinity,   "player" wins
+    # utility =  |   -infinity,   "player" loses
+    #             \          0,    otherwise
+    if game.is_loser(player):
+        return float("-inf")
+    elif game.is_winner(player):
+        return float("inf")
+
     move_num_weight = game.move_count * 10000
 
     # moves can tally up to 8
-    oppo_mov = float(len(game.get_legal_moves(game.get_opponent(player))))
-    if oppo_mov == 0:
-        return float("inf")
-    elif oppo_mov == 1:
+    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
+    if oppo_mov == 1:
         return float(4000)
     elif oppo_mov == 2:
         return float(2000)
 
     my_moves = len(game.get_legal_moves(player))
-    if my_moves == 0:
-        return float("-inf")
-    elif my_moves == 1:
+    if my_moves == 1:
         return float(-4000)
     elif my_moves == 2:
         return float(-2000)
@@ -201,6 +208,7 @@ def custom_score_3(game, player):
     value = mov_diff + move_num_weight
 
     return float(value)
+
 
 
 class IsolationPlayer:
@@ -231,6 +239,7 @@ class IsolationPlayer:
         self.score = score_fn
         self.time_left = None
         self.TIMER_THRESHOLD = timeout
+
 
 
 class MinimaxPlayer(IsolationPlayer):
@@ -269,15 +278,15 @@ class MinimaxPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        # Initialize the best move so that this function returns something
-        # in case the search fails due to timeout
         legal = game.get_legal_moves()
         if Verbose:
             print("legal:", legal)
 
         if len(legal) == 0:
             return (-1, -1)
-        # init
+
+        # Initialize the best move so that this function returns something
+        # in case the search fails due to timeout
         best_move = legal[0]
 
         try:
@@ -460,8 +469,9 @@ class AlphaBetaPlayer(IsolationPlayer):
         return best_move
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
-        """Implement depth-limited minimax search with alpha-beta pruning as
-        described in the lectures.
+        """
+        Implement depth-limited minimax search with alpha-beta
+        pruning as described in the lectures.
 
         This should be a modified version of ALPHA-BETA-SEARCH in the AIMA text
         https://github.com/aimacode/aima-pseudocode/blob/master/md/Alpha-Beta-Search.md
@@ -563,7 +573,6 @@ class AlphaBetaPlayer(IsolationPlayer):
                 if (v <= alpha):
                     return v, move_for_v
                 beta = min(beta, v)
-
         return v, move_for_v
 
     def terminal_test(self, gamestate):
