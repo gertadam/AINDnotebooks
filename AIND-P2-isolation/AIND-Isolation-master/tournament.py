@@ -18,7 +18,7 @@ import random
 from collections import namedtuple
 
 from isolation import Board
-from sample_players import (RandomPlayer, open_move_score,
+from sample_players import (GreedyPlayer, RandomPlayer, open_move_score,
                             improved_score, center_score)
 from game_agent import (MinimaxPlayer, AlphaBetaPlayer, custom_score,
                         custom_score_2, custom_score_3)
@@ -144,7 +144,8 @@ def main():
         Agent(MinimaxPlayer(score_fn=improved_score), "MM_Improved"),
         Agent(AlphaBetaPlayer(score_fn=open_move_score), "AB_Open"),
         Agent(AlphaBetaPlayer(score_fn=center_score), "AB_Center"),
-        Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved")
+        Agent(AlphaBetaPlayer(score_fn=improved_score), "AB_Improved"),
+        Agent(GreedyPlayer(), "AB_Greedy")
     ]
 
     print(DESCRIPTION)

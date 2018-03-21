@@ -37,7 +37,7 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # simple
+    # simple -> fast -> deep
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
@@ -45,17 +45,29 @@ def custom_score(game, player):
 
     move_num = game.move_count
 
+    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
+    if oppo_mov == 1:
+        return float(80+move_num)
+    elif oppo_mov == 2:
+        return float(40+move_num)
+
+    my_moves = len(game.get_legal_moves(player))
+    if my_moves == 1:
+        return float(-80-move_num)
+    elif my_moves == 2:
+        return float(-40-move_num)
+
+    mov_diff_value = my_moves - (1.1 * oppo_mov)
+
     # we prefer to be in the center.. until we cannot
     cur_loc = game.get_player_location(player)
     if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = move_num * 200
+        cl_value = 50
     else:
-        cl_value = move_num * -200
+        cl_value = -50
 
+    return float(mov_diff_value * 50) + cl_value + move_num
 
-    state_value = move_num * 1000 + cl_value
-
-    return float(state_value)
 
 def custom_score_2(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -80,28 +92,6 @@ def custom_score_2(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # # Move_diff score
-    # oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
-    # my_moves = len(game.get_legal_moves(player))
-    #
-    # if oppo_mov == 0:
-    #     return float("inf")
-    # if my_moves == 0:
-    #     return float("-inf")
-    #
-    # if oppo_mov == 1:
-    #     return float(5000)
-    # if my_moves == 1:
-    #     return float(-5000)
-    #
-    # if oppo_mov == 2:
-    #     return float(500)
-    # if my_moves == 2:
-    #     return float(-500)
-    #
-    # move_diff = (my_moves - 1.6 * oppo_mov) * 20
-    #
-    # return float(move_diff)
 
     # mov#+centrloc
     if game.is_loser(player):
@@ -109,33 +99,24 @@ def custom_score_2(game, player):
     elif game.is_winner(player):
         return float("inf")
 
-    # what it takes to be a winner - have the "highest move number"
-    move_num = game.move_count
-
-    # staying away from the edges - becomes ever more important. Hence multiplied by move_num
-    cur_loc = game.get_player_location(player)
-    # current location inside inner box
-    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = move_num * 200
-    else:
-        # current location along the board edges
-        cl_value = move_num * -200
-
     oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
     if oppo_mov == 1:
-        return float(4000)
+        return float(8000)
     elif oppo_mov == 2:
-        return float(2000)
+        return float(4000)
 
     my_moves = len(game.get_legal_moves(player))
     if my_moves == 1:
-        return float(-4000)
+        return float(-8000)
     elif my_moves == 2:
-        return float(-2000)
+        return float(-4000)
 
-    mov_diff_value = ((my_moves - 1.73 * oppo_mov) * 1200)
+    mov_diff_value = my_moves - (1.1 * oppo_mov)
 
-    state_value = mov_diff_value + cl_value + move_num*10000
+    # what it takes to be a winner - have the "highest move number"
+    move_num = game.move_count
+
+    state_value = (mov_diff_value * 2000) + (move_num * 10000)
 
     return float(state_value)
 
@@ -169,23 +150,25 @@ def custom_score_3(game, player):
     elif game.is_winner(player):
         return float("inf")
 
-    # moves can tally up to 8
-    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
-    if oppo_mov == 1:
-        return float(8000)
-    elif oppo_mov == 2:
-        return float(4000)
+    # what it takes to be a winner - have the "highest move number"
+    move_num = game.move_count
 
-    my_moves = len(game.get_legal_moves(player))
-    if my_moves == 1:
-        return float(-8000)
-    elif my_moves == 2:
-        return float(-4000)
+    # staying away from the edges - becomes ever more important. Hence multiplied by move_num
+    cur_loc = game.get_player_location(player)
+    # current location inside inner box
+    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
+        cl_value = 100 + move_num
+    else:
+        # current location along the board edges
+        cl_value = -100 - move_num
 
-    mov_diff_value = (my_moves - (1.73 * oppo_mov))
-
-    # counting up towards the final conclusion
-    turn_effect = game.move_count * 0.1                 # the "speed" of the effect based on move_num
+    # Is our next move going to take us to the Board.edge
+    # thereby reducing the number of legal moves available
+    # to us.
+    # In the opening-moves, it is not a problem
+    # that we move along the edge, but it
+    # increasingly becomes a challenge.
+    turn_effect = move_num                  # the "speed" of the effect based on move_num
 
     in_area      = []
     outside_area = []
@@ -197,15 +180,15 @@ def custom_score_3(game, player):
         else:
             outside_area.append(in_out)    # can only be 1-4
 
-    in_val = len(in_area)*turn_effect              # *  0.1 0.2 0.3 ...
+    in_val = len(in_area)*turn_effect                 # *  *1, *2, *3, *4 ...
 
     # the longer we play the game - the more -
     # we want to avoid having to risk getting "trapped" outside
-    # out has -by far- the best score to start with
+    # out has -by far- the best score to start with -
     # after 15 turns - they switch - af 30 out goes negative
-    out_val = len(outside_area)*(3-turn_effect)     # *  2.9 2.8 2.7 ...
+    out_val = len(outside_area)*(30-turn_effect)     #  *29, *28, *27, *26 ...
 
-    state_value = mov_diff_value * 1200 + in_val * 10000 + out_val
+    state_value = cl_value + in_val * 20 + out_val + move_num
 
     return float(state_value)
 

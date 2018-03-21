@@ -2,7 +2,8 @@
 tests to run and debug your minimax and alphabeta agents locally.  The test
 cases used by the project assistant are not public.
 """
-
+from sample_players import (GreedyPlayer, RandomPlayer, open_move_score,
+                            improved_score, center_score)
 import unittest
 import timeit
 import isolation
@@ -25,7 +26,7 @@ class IsolationTest(unittest.TestCase):
         self.player1 = game_agent.MinimaxPlayer()
         self.player2 = game_agent.MinimaxPlayer()
         
-        for i in range(50):
+        for i in range(75):
             move = self.game.active_player.get_move(self.game, time_left = lambda : 100000   )
             print(move)
             self.game.apply_move(move)
@@ -35,8 +36,8 @@ class IsolationTest(unittest.TestCase):
     def test_alphabeta(self):
         print("---------- testing alpha beta player ----------")
         self.player1 = game_agent.AlphaBetaPlayer()
-        self.player2 = game_agent.AlphaBetaPlayer()
-        self.game = isolation.Board(self.player1, self.player2, 8, 8)
+        self.player2 = GreedyPlayer()
+        self.game = isolation.Board(self.player1, self.player2, 12, 12)
 
             
         time_millis = lambda: 1000 * timeit.default_timer()
