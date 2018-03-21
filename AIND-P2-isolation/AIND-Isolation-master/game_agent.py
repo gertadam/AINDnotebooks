@@ -3,7 +3,8 @@ Finish all TODO items in this file to complete the isolation project, then
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
-Verbose = True
+Verbose = False
+Bugging = False
 
 
 class SearchTimeout(Exception):
@@ -279,7 +280,7 @@ class MinimaxPlayer(IsolationPlayer):
         self.time_left = time_left
 
         legal = game.get_legal_moves()
-        if Verbose:
+        if Verbose or Bugging:
             print("legal:", legal)
 
         if len(legal) == 0:
