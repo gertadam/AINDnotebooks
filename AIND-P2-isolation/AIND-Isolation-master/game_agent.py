@@ -48,46 +48,12 @@ def custom_score(game, player):
     # we prefer to be in the center.. until we cannot
     cur_loc = game.get_player_location(player)
     if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = move_num * 20
+        cl_value = move_num * 200
     else:
-        cl_value = move_num * -20
+        cl_value = move_num * -200
 
-    # lets divide the board into 4 squares
-    blanks_count = [0, 0, 0, 0]
-    height       = game.height
-    width        = game.width
-    center_h     = height//2
-    center_w     = width//2
 
-    blankslist = game.get_blank_spaces()
-    for loc in blankslist:
-        if loc[0] <= center_h-1:
-            if loc[1] <= center_w-1:
-                blanks_count[0] += 1
-            elif loc[1] >= width-center_w:
-                blanks_count[1] += 1
-        elif loc[0] >= height-center_h:
-            if loc[1] <= center_w-1:
-                blanks_count[2] += 1
-            elif loc[1] >= width-center_w:
-                blanks_count[3] += 1
-
-    if Verbose or Bugging:
-        print("blanks_count", blanks_count)
-
-    bl_multi = 0
-    if cur_loc[0] <= center_h-1:
-        if cur_loc[1] <= center_w-1:
-            bl_multi = blanks_count[0]
-        elif cur_loc[1] >= width-center_w:
-            bl_multi = blanks_count[1]
-    elif cur_loc[0] >= height-center_h:
-        if cur_loc[1] <= center_w-1:
-            bl_multi = blanks_count[2]
-        elif cur_loc[1] >= width-center_w:
-            bl_multi = blanks_count[3]
-
-    state_value = move_num * 1000 + cl_value + bl_multi * 1000
+    state_value = move_num * 1000 + cl_value
 
     return float(state_value)
 
@@ -144,16 +110,16 @@ def custom_score_2(game, player):
         return float("inf")
 
     # what it takes to be a winner - have the "highest move number"
-    move_num = game.move_count * 1000
+    move_num = game.move_count
 
     # staying away from the edges - becomes ever more important. Hence multiplied by move_num
     cur_loc = game.get_player_location(player)
     # current location inside inner box
     if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = move_num * 20
+        cl_value = move_num * 200
     else:
         # current location along the board edges
-        cl_value = move_num * -20
+        cl_value = move_num * -200
 
     oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
     if oppo_mov == 1:
@@ -169,7 +135,7 @@ def custom_score_2(game, player):
 
     mov_diff_value = ((my_moves - 1.73 * oppo_mov) * 1200)
 
-    state_value = mov_diff_value + cl_value + move_num
+    state_value = mov_diff_value + cl_value + move_num*10000
 
     return float(state_value)
 
@@ -206,17 +172,17 @@ def custom_score_3(game, player):
     # moves can tally up to 8
     oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
     if oppo_mov == 1:
-        return float(4000)
+        return float(8000)
     elif oppo_mov == 2:
-        return float(2000)
+        return float(4000)
 
     my_moves = len(game.get_legal_moves(player))
     if my_moves == 1:
-        return float(-4000)
+        return float(-8000)
     elif my_moves == 2:
-        return float(-2000)
+        return float(-4000)
 
-    mov_diff_value = ((my_moves - 1.73 * oppo_mov) * 1200)
+    mov_diff_value = (my_moves - (1.73 * oppo_mov))
 
     # counting up towards the final conclusion
     turn_effect = game.move_count * 0.1                 # the "speed" of the effect based on move_num
@@ -231,7 +197,7 @@ def custom_score_3(game, player):
         else:
             outside_area.append(in_out)    # can only be 1-4
 
-    in_val  = len(in_area)*turn_effect              # *  0.1 0.2 0.3 ...
+    in_val = len(in_area)*turn_effect              # *  0.1 0.2 0.3 ...
 
     # the longer we play the game - the more -
     # we want to avoid having to risk getting "trapped" outside
@@ -239,10 +205,59 @@ def custom_score_3(game, player):
     # after 15 turns - they switch - af 30 out goes negative
     out_val = len(outside_area)*(3-turn_effect)     # *  2.9 2.8 2.7 ...
 
-    state_value = mov_diff_value + in_val + out_val
+    state_value = mov_diff_value * 1200 + in_val * 10000 + out_val
+
     return float(state_value)
 
+def custom_score_4(game, player):
+    # Here we retire the implemented ideas, that did not work
+    # lets divide the board into 4 squares
 
+    """
+    :param game:
+    :param player:
+    :return: float(bl_multi)
+
+    # blanks_count = [0, 0, 0, 0]
+    # height       = game.height
+    # width        = game.width
+    # center_h     = height//2
+    # center_w     = width//2
+    #
+    # # On the 8by8-Board Max is 16 blanks
+    # blankslist = game.get_blank_spaces()
+    # for loc in blankslist:
+    #     if loc[0] <= center_h-1:
+    #         if loc[1] <= center_w-1:
+    #             blanks_count[0] += 1
+    #         elif loc[1] >= width-center_w:
+    #             blanks_count[1] += 1
+    #     elif loc[0] >= height-center_h:
+    #         if loc[1] <= center_w-1:
+    #             blanks_count[2] += 1
+    #         elif loc[1] >= width-center_w:
+    #             blanks_count[3] += 1
+    #
+    # if Verbose or Bugging:
+    #     print("blanks_count", blanks_count)
+    #
+    # # We want to move to the area with most blanks
+    # bl_multi = 0
+    # if cur_loc[0] <= center_h-1:
+    #     if cur_loc[1] <= center_w-1:
+    #         bl_multi = blanks_count[0]
+    #     elif cur_loc[1] >= width-center_w:
+    #         bl_multi = blanks_count[1]
+    # elif cur_loc[0] >= height-center_h:
+    #     if cur_loc[1] <= center_w-1:
+    #         bl_multi = blanks_count[2]
+    #     elif cur_loc[1] >= width-center_w:
+    #         bl_multi = blanks_count[3]
+    #
+    # return float(bl_multi)
+    """
+
+    pass
 
 
 class IsolationPlayer:
