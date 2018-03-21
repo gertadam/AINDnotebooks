@@ -36,7 +36,7 @@ class IsolationTest(unittest.TestCase):
         print("---------- testing alpha beta player ----------")
         self.player1 = game_agent.AlphaBetaPlayer()
         self.player2 = game_agent.AlphaBetaPlayer()
-        self.game = isolation.Board(self.player1, self.player2, 12, 12)
+        self.game = isolation.Board(self.player1, self.player2, 20, 12)
 
             
         time_millis = lambda: 1000 * timeit.default_timer()

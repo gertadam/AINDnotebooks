@@ -4,7 +4,7 @@ test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
 Verbose = False
-Bugging = False
+Bugging = True
 
 
 class SearchTimeout(Exception):
