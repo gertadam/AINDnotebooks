@@ -211,55 +211,6 @@ def custom_score_3(game, player):
 
     return float(state_value)
 
-def custom_score_4(game, player):
-    # Here we retire the implemented ideas, that did not work
-    # lets divide the board into 4 squares
-
-    """
-    :param game:
-    :param player:
-    :return: float(bl_multi)
-
-    # blanks_count = [0, 0, 0, 0]
-    # height       = game.height
-    # width        = game.width
-    # center_h     = height//2
-    # center_w     = width//2
-    #
-    # # On the 8by8-Board Max is 16 blanks
-    # blankslist = game.get_blank_spaces()
-    # for loc in blankslist:
-    #     if loc[0] <= center_h-1:
-    #         if loc[1] <= center_w-1:
-    #             blanks_count[0] += 1
-    #         elif loc[1] >= width-center_w:
-    #             blanks_count[1] += 1
-    #     elif loc[0] >= height-center_h:
-    #         if loc[1] <= center_w-1:
-    #             blanks_count[2] += 1
-    #         elif loc[1] >= width-center_w:
-    #             blanks_count[3] += 1
-    #
-    # if Verbose or Bugging:
-    #     print("blanks_count", blanks_count)
-    #
-    # # We want to move to the area with most blanks
-    # bl_multi = 0
-    # if cur_loc[0] <= center_h-1:
-    #     if cur_loc[1] <= center_w-1:
-    #         bl_multi = blanks_count[0]
-    #     elif cur_loc[1] >= width-center_w:
-    #         bl_multi = blanks_count[1]
-    # elif cur_loc[0] >= height-center_h:
-    #     if cur_loc[1] <= center_w-1:
-    #         bl_multi = blanks_count[2]
-    #     elif cur_loc[1] >= width-center_w:
-    #         bl_multi = blanks_count[3]
-    #
-    # return float(bl_multi)
-    """
-
-    pass
 
 
 class IsolationPlayer:
@@ -504,8 +455,9 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         if num_legal == 0:
             return (-1, -1)
-        elif num_legal == 1:
-            return legal_list[0]
+
+        # elif num_legal == 1:
+        #     return legal_list[0]
 
         # init
         best_move = legal_list[0]
