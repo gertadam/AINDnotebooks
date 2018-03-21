@@ -553,7 +553,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             else:
                 return float("inf"), move_for_v  # by assumption 2
 
-        if depth == 0 or legal_moves == 1:
+        if depth == 0: # or legal_moves == 1:
             if Verbose:
                 print("move#:", gameState.move_count)
             return self.score(gameState, self), move_for_v
