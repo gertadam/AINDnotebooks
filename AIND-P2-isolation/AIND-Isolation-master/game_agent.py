@@ -123,6 +123,7 @@ def custom_score_2(game, player):
         print("blanks_count", blanks_count)
 
     # We want to move to the area with most blanks
+    cur_loc = game.get_player_location(player)
 
     if cur_loc[0] <= center_h-1:
         if cur_loc[1] <= center_w-1:
