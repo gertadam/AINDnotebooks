@@ -4,7 +4,7 @@ test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
 Verbose = False
-Bugging = True
+Bugging = False
 
 
 class SearchTimeout(Exception):
@@ -43,7 +43,7 @@ def custom_score(game, player):
     elif game.is_winner(player):
         return float("inf")
 
-    move_num = game.move_count * 10000
+    move_num = game.move_count
 
     # we prefer to be in the center.. until we cannot
     p_loc = game.get_player_location(player)
@@ -52,10 +52,44 @@ def custom_score(game, player):
     else:
         cl_value = move_num * -20
 
-    state_value = move_num + cl_value
+    # lets divide the board into 4 squares
+    blanks_count = [0, 0, 0, 0]
+    height       = game.height
+    width        = game.width
+    center_h     = height//2
+    center_w     = width//2
+
+    blankslist = game.get_blank_spaces()
+    for loc in blankslist:
+        if loc[0] <= center_h-1:
+            if loc[1] <= center_w-1:
+                blanks_count[0] += 1
+            elif loc[1] >= width-center_w:
+                blanks_count[1] += 1
+        elif loc[0] >= height-center_h:
+            if loc[1] <= center_w-1:
+                blanks_count[2] += 1
+            elif loc[1] >= width-center_w:
+                blanks_count[3] += 1
+
+    if Verbose or Bugging:
+        print("blanks_count", blanks_count)
+
+    bl_multi = 0
+    if p_loc[0] <= center_h-1:
+        if p_loc[1] <= center_w-1:
+            bl_multi = blanks_count[0]
+        elif p_loc[1] >= width-center_w:
+            bl_multi = blanks_count[1]
+    elif p_loc[0] >= height-center_h:
+        if p_loc[1] <= center_w-1:
+            bl_multi = blanks_count[2]
+        elif p_loc[1] >= width-center_w:
+            bl_multi = blanks_count[3]
+
+    state_value = move_num * 1000 + cl_value + bl_multi * 1000
 
     return float(state_value)
-
 
 def custom_score_2(game, player):
     """Calculate the heuristic value of a game state from the point of view
@@ -79,29 +113,29 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    '''# Move_diff score
-    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
-    my_moves = len(game.get_legal_moves(player))
 
-    if oppo_mov == 0:
-        return float("inf")
-    if my_moves == 0:
-        return float("-inf")
-
-    if oppo_mov == 1:
-        return float(5000)
-    if my_moves == 1:
-        return float(-5000)
-
-    if oppo_mov == 2:
-        return float(500)
-    if my_moves == 2:
-        return float(-500)
-
-    move_diff = (my_moves - 1.6 * oppo_mov) * 20
-
-    return float(move_diff)
-    '''
+    # # Move_diff score
+    # oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
+    # my_moves = len(game.get_legal_moves(player))
+    #
+    # if oppo_mov == 0:
+    #     return float("inf")
+    # if my_moves == 0:
+    #     return float("-inf")
+    #
+    # if oppo_mov == 1:
+    #     return float(5000)
+    # if my_moves == 1:
+    #     return float(-5000)
+    #
+    # if oppo_mov == 2:
+    #     return float(500)
+    # if my_moves == 2:
+    #     return float(-500)
+    #
+    # move_diff = (my_moves - 1.6 * oppo_mov) * 20
+    #
+    # return float(move_diff)
 
     # mov#+centrloc
     if game.is_loser(player):
@@ -109,17 +143,33 @@ def custom_score_2(game, player):
     elif game.is_winner(player):
         return float("inf")
 
-    move_num = game.move_count
+    # what it takes to be a winner - have the "highest move number"
+    move_num = game.move_count * 1000
+
     # staying away from the edges - becomes ever more important. Hence multiplied by move_num
     p_loc = game.get_player_location(player)
-        # current location inside inner box
+    # current location inside inner box
     if 1 <= p_loc[0] <= game.height - 2 and 1 <= p_loc[1] <= game.width - 2:
         cl_value = move_num * 20
     else:
         # current location along the board edges
         cl_value = move_num * -20
 
-    state_value = cl_value + move_num * 100
+    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
+    if oppo_mov == 1:
+        return float(4000)
+    elif oppo_mov == 2:
+        return float(2000)
+
+    my_moves = len(game.get_legal_moves(player))
+    if my_moves == 1:
+        return float(-4000)
+    elif my_moves == 2:
+        return float(-2000)
+
+    mov_diff_value = ((my_moves - 1.73 * oppo_mov) * 1200)
+
+    state_value = mov_diff_value + cl_value + move_num
 
     return float(state_value)
 
@@ -146,50 +196,12 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # # in_or_out score
-    # blanks_list = game.get_blank_spaces()
-    # # counting up towards the final conclusion
-    # turn = (game.height*game.width)-len(blanks_list)
-    # turn_effect = turn * 0.1       # how much effect
-    #
-    # # keep inside the middle
-    # cur_loc = game.get_player_location(player)
-    # if 1 <= cur_loc[0] <= game.height-2 and 1 <= cur_loc[1] <= game.width-2:
-    #     cl_value=100
-    # else:
-    #     cl_value=-100
-    #
-    # in_area      = []
-    # outside_area = []
-    # # how many next moves are in the center
-    # legal_list = game.get_legal_moves()
-    # for in_out in legal_list:
-    #     if 1 <= in_out[0] <= game.height-2 and 1 <= in_out[1] <= game.width-2:
-    #         in_area.append(in_out)         # could be 1-8
-    #     else:
-    #         outside_area.append(in_out)    # can only be 1-4
-    #
-    # in_val  = len(in_area)*turn_effect            # *  0.1 0.2 0.3 0.4 0.5 0.6
-    #
-    # # the longer we play the move we want to avoid getting "trapped" outside
-    # out_val = len(outside_area)*(1-turn_effect)   # *  0.9 0.8 0.7 0.6 0.5 0.4
-    #
-    # return float(cl_value+in_val+out_val)
 
-    # count+_diff
-
-    # game.utility returns the utility of the current game state from the perspective
-    # of the specified player.
-    #
-    #             /  +infinity,   "player" wins
-    # utility =  |   -infinity,   "player" loses
-    #             \          0,    otherwise
+    # count +_diff
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
         return float("inf")
-
-    move_num_weight = game.move_count * 10000
 
     # moves can tally up to 8
     oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
@@ -204,9 +216,42 @@ def custom_score_3(game, player):
     elif my_moves == 2:
         return float(-2000)
 
-    mov_diff = ((my_moves - 1.73 * oppo_mov) * 1200)
+    mov_diff_value = ((my_moves - 1.73 * oppo_mov) * 1200)
 
-    value = mov_diff + move_num_weight
+    move_num_weight = game.move_count * 1000
+
+    # keep inside the middle
+    cur_loc = game.get_player_location(player)
+    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
+        cl_value = 100
+    else:
+        cl_value = -100
+
+    blanks_list = game.get_blank_spaces()
+    # counting up towards the final conclusion
+    turn = game.move_count
+    turn_effect = turn * 0.1                 # the "speed" of the effect based on move_num
+
+    in_area      = []
+    outside_area = []
+    # how many next moves are in the center
+    legal_list = game.get_legal_moves()
+    for in_out in legal_list:
+        if 1 <= in_out[0] <= game.height-2 and 1 <= in_out[1] <= game.width-2:
+            in_area.append(in_out)         # could be 1-8
+        else:
+            outside_area.append(in_out)    # can only be 1-4
+
+    in_val  = len(in_area)*turn_effect            # *  0.1 0.2 0.3 ...
+
+    # the longer we play the move we want to avoid getting "trapped" outside
+    out_val = len(outside_area)*(2-turn_effect)   # *  1.9 1.8 1.7 ...
+
+    state_value = mov_diff_value + move_num_weight + cl_value + in_val + out_val
+    return float(state_value)
+
+
+    value = mov_diff_value + move_num_weight
 
     return float(value)
 
@@ -279,16 +324,18 @@ class MinimaxPlayer(IsolationPlayer):
         """
         self.time_left = time_left
 
-        legal = game.get_legal_moves()
+        legal_list = game.get_legal_moves()
         if Verbose or Bugging:
-            print("legal:", legal)
+            print("legal:", legal_list)
 
-        if len(legal) == 0:
+        if len(legal_list) == 0:
             return (-1, -1)
+        elif len(legal_list) == 1:
+            return legal_list[0]
 
         # Initialize the best move so that this function returns something
         # in case the search fails due to timeout
-        best_move = legal[0]
+        best_move = legal_list[0]
 
         try:
             # The try/except block will automatically catch the exception
@@ -343,17 +390,17 @@ class MinimaxPlayer(IsolationPlayer):
         # minimax decision main
         self.time_test()
 
-        legal = game.get_legal_moves()
+        legal_list = game.get_legal_moves()
 
-        if len(legal) == 0:
+        if len(legal_list) == 0:
             return (-1, -1)
         # init
-        best_move = legal[0]
+        best_move = legal_list[0]
 
         best_score = float("-inf")
 
         # max(legal, min_value(state,depth)
-        for m in legal:
+        for m in legal_list:
             v = self.min_value(game.forecast_move(m), depth - 1)
             if v > best_score:
                 best_score = v
@@ -447,7 +494,7 @@ class AlphaBetaPlayer(IsolationPlayer):
         legal_list = game.get_legal_moves()
         num_legal = len(legal_list)
 
-        if Verbose:
+        if Verbose or Bugging:
             print("legal_list:", legal_list)
 
         if num_legal == 0:
