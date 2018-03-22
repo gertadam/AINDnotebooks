@@ -63,13 +63,7 @@ def custom_score(game, player):
 
     mov_diff_value = (my_moves - (1.7 * oppo_mov)) * 2000
 
-    cur_loc = game.get_player_location(player)
-    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = move_num * 1000
-    else:
-        cl_value = move_num * -1000
-
-    return float(move_value + oppo_value + my_moves_value + mov_diff_value + cl_value)
+    return float(move_value + oppo_value + my_moves_value + mov_diff_value)
 
 
 def custom_score_2(game, player):
@@ -192,6 +186,12 @@ def custom_score_3(game, player):
     # what it takes to be a winner - have the "highest move number"
     move_num = game.move_count
 
+    cur_loc = game.get_player_location(player)
+    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
+        cl_value = move_num * 1000
+    else:
+        cl_value = move_num * -1000
+
     # Is our next move going to take us to the Board.edge thereby
     # reducing the number of legal moves available to us.
     # In the opening-moves, it is not a problem that we move along
@@ -213,7 +213,7 @@ def custom_score_3(game, player):
     out_val = len(outside_area) * (30 - move_num)  # *29, *28, *27, *26 ...
     in_val = len(in_area) * move_num  # *  *1, *2, *3, *4 ...
 
-    return float(out_val + (in_val * 20) + (move_num * 10000))
+    return float((move_num * 10000) + cl_value + out_val + (in_val * 20))
 
 
 class IsolationPlayer:
