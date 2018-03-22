@@ -37,36 +37,34 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # simple -> fast -> deep
+    # go deep
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
         return float("inf")
 
+    # There is only one way to win -be the last one standing-
+    # The deeper we have gone compared to other gamestates -
+    # the better this gamestate must be
+
     move_num = game.move_count
+    move_value = move_num * 100000
 
     oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
-    if oppo_mov == 1:
-        return float(50000 + move_num)
-    elif oppo_mov == 2:
-        return float(10000 + move_num)
+    oppo_value = (10 - oppo_mov) * 100
 
     my_moves = len(game.get_legal_moves(player))
-    if my_moves == 1:
-        return float(-50000 - move_num)
-    elif my_moves == 2:
-        return float(-10000 - move_num)
+    my_moves_value = my_moves * move_num
 
-    mov_diff_value = my_moves - (1.7 * oppo_mov)
+    mov_diff_value = (my_moves - (1.7 * oppo_mov)) * 2000
 
-    # we prefer to be in the center.. until we cannot
     cur_loc = game.get_player_location(player)
     if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = 1000
+        cl_value = move_num * 1000
     else:
-        cl_value = -1000
+        cl_value = move_num * -1000
 
-    return float(mov_diff_value * 2000) + cl_value + move_num * 5
+    return float(move_value + oppo_value + my_moves_value + mov_diff_value + cl_value)
 
 
 def custom_score_2(game, player):
@@ -92,52 +90,51 @@ def custom_score_2(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-
-    # mov#+centrloc
+    # The four squares
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
         return float("inf")
 
+    move_num = game.move_count
+
     blanks_count = [0, 0, 0, 0]
-    height       = game.height
-    width        = game.width
-    center_h     = height//2
-    center_w     = width//2
+    height = game.height
+    width = game.width
+    center_h = height // 2
+    center_w = width // 2
 
     # On the 8by8-Board Max is 16 blanks
     blankslist = game.get_blank_spaces()
     for loc in blankslist:
-        if loc[0] <= center_h-1:
-            if loc[1] <= center_w-1:
+        if loc[0] <= center_h - 1:
+            if loc[1] <= center_w - 1:
                 blanks_count[0] += 1
-            elif loc[1] >= width-center_w:
+            elif loc[1] >= width - center_w:
                 blanks_count[1] += 1
-        elif loc[0] >= height-center_h:
-            if loc[1] <= center_w-1:
+        elif loc[0] >= height - center_h:
+            if loc[1] <= center_w - 1:
                 blanks_count[2] += 1
-            elif loc[1] >= width-center_w:
+            elif loc[1] >= width - center_w:
                 blanks_count[3] += 1
 
     if Verbose or Bugging:
         print("blanks_count", blanks_count)
 
     # We want to move to the area with most blanks
-    cur_loc = game.get_player_location(player)
+    bl_multi = 0
+    if cur_loc[0] <= center_h - 1:
+        if cur_loc[1] <= center_w - 1:
+            bl_multi = blanks_count[0]
+        elif cur_loc[1] >= width - center_w:
+            bl_multi = blanks_count[1]
+    elif cur_loc[0] >= height - center_h:
+        if cur_loc[1] <= center_w - 1:
+            bl_multi = blanks_count[2]
+        elif cur_loc[1] >= width - center_w:
+            bl_multi = blanks_count[3]
 
-    if cur_loc[0] <= center_h-1:
-        if cur_loc[1] <= center_w-1:
-            return float(blanks_count[0])
-        elif cur_loc[1] >= width-center_w:
-            return float(blanks_count[1])
-    elif cur_loc[0] >= height-center_h:
-        if cur_loc[1] <= center_w-1:
-            return float(blanks_count[2])
-        elif cur_loc[1] >= width-center_w:
-            return float(blanks_count[3])
-
-    # on odd boardsizes the rest are mid-board
-    return float(5)
+    return float((move_num * 100) + (bl_multi * 10000))
 
 
 def custom_score_3(game, player):
@@ -163,7 +160,7 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # count +_diff
+    # inside outside
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
@@ -172,45 +169,28 @@ def custom_score_3(game, player):
     # what it takes to be a winner - have the "highest move number"
     move_num = game.move_count
 
-    # staying away from the edges - becomes ever more important. Hence multiplied by move_num
-    cur_loc = game.get_player_location(player)
-    # current location inside inner box
-    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = 100 + move_num
-    else:
-        # current location along the board edges
-        cl_value = -100 - move_num
-
-    # Is our next move going to take us to the Board.edge
-    # thereby reducing the number of legal moves available
-    # to us.
-    # In the opening-moves, it is not a problem
-    # that we move along the edge, but it
-    # increasingly becomes a challenge.
-    turn_effect = move_num                  # the "speed" of the effect based on move_num
-
-    in_area      = []
+    # Is our next move going to take us to the Board.edge thereby
+    # reducing the number of legal moves available to us.
+    # In the opening-moves, it is not a problem that we move along
+    # the edge, but it increasingly becomes a challenge.
+    in_area = []
     outside_area = []
     # how many next moves are in the center
     legal_list = game.get_legal_moves()
     for in_out in legal_list:
-        if 1 <= in_out[0] <= game.height-2 and 1 <= in_out[1] <= game.width-2:
-            in_area.append(in_out)         # could be 1-8
+        if 1 <= in_out[0] <= game.height - 2 and 1 <= in_out[1] <= game.width - 2:
+            in_area.append(in_out)  # could be 1-8
         else:
-            outside_area.append(in_out)    # can only be 1-4
-
-    in_val = len(in_area)*turn_effect                 # *  *1, *2, *3, *4 ...
+            outside_area.append(in_out)  # can only be 1-4
 
     # the longer we play the game - the more -
     # we want to avoid having to risk getting "trapped" outside
     # out has -by far- the best score to start with -
     # after 15 turns - they switch - af 30 out goes negative
-    out_val = len(outside_area)*(30-turn_effect)     #  *29, *28, *27, *26 ...
+    out_val = len(outside_area) * (30 - move_num)  # *29, *28, *27, *26 ...
+    in_val = len(in_area) * move_num  # *  *1, *2, *3, *4 ...
 
-    state_value = cl_value + in_val * 20 + out_val + move_num
-
-    return float(state_value)
-
+    return float(out_val + (in_val * 20) + (move_num * 10000))
 
 
 class IsolationPlayer:
@@ -241,7 +221,6 @@ class IsolationPlayer:
         self.score = score_fn
         self.time_left = None
         self.TIMER_THRESHOLD = timeout
-
 
 
 class MinimaxPlayer(IsolationPlayer):
@@ -553,7 +532,7 @@ class AlphaBetaPlayer(IsolationPlayer):
             else:
                 return float("inf"), move_for_v  # by assumption 2
 
-        if depth == 0: # or legal_moves == 1:
+        if depth == 0:  # or legal_moves == 1:
             if Verbose:
                 print("move#:", gameState.move_count)
             return self.score(gameState, self), move_for_v
