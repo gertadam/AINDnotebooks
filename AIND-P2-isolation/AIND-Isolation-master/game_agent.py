@@ -96,6 +96,8 @@ def custom_score_2(game, player):
     elif game.is_winner(player):
         return float("inf")
 
+    cur_loc = game.get_player_location(player)
+
     move_num = game.move_count
 
     blanks_count = [0, 0, 0, 0]
