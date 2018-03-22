@@ -37,9 +37,11 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # go deep - value the deepest tree
+    # go deep - value the deepest tree-branch
+    #
     # if two branches have the same move_num THEN
-    # value the branch with most legal moves higher
+    # value the branch with most move_diff, that is
+    # more legal moves at this game-state, than the opp
 
     if game.is_loser(player):
         return float("-inf")
