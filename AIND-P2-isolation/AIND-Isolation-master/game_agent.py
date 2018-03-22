@@ -38,14 +38,17 @@ def custom_score(game, player):
     """
 
     # go deep - value the deepest tree
+    # if two branches have the same move_num THEN
+    # value the branch with most legal moves higher
+
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
         return float("inf")
 
     # There is only one way to win -be the last one standing-
-    # The deeper we have gone compared to other gamestates -
-    # the better this gamestate must be
+    # The deeper we have gone compared to other game-states
+    #  - the better this game-state must be.
 
     move_num = game.move_count
     move_value = move_num * 100000
@@ -91,7 +94,11 @@ def custom_score_2(game, player):
     """
 
     # The four squares
-    # - value current locs in the square with most blanks
+    # - value highest, game-states where the players
+    # current location is in the square (A, B, C, D)
+    # which has most blanks
+    # So when AB
+    #
 
     if game.is_loser(player):
         return float("-inf")
@@ -166,9 +173,14 @@ def custom_score_3(game, player):
 
     # go deep - but differentiate
     # inside from outside
-    # value the deepest tree-branch but
-    # if branches end at the same depth
-    # take the one inside
+    # value the deepest tree-branch but if
+    # branches are evaluated -at the same depth- THEN
+    # give the curloc that has many legal-children
+    # inside the center of the board
+    # a higher value
+    # than a curloc that has few children
+    # inside the center of the board
+
 
     if game.is_loser(player):
         return float("-inf")
@@ -278,11 +290,14 @@ class MinimaxPlayer(IsolationPlayer):
         # Initialize the best move so that this function returns something
         # in case the search fails due to timeout
         best_move = legal_list[0]
+        blanks_list = game.get_blank_spaces()
 
         try:
             # The try/except block will automatically catch the exception
             # raised when the timer is about to expire.
-            return self.minimax(game, self.search_depth)
+            # iterative deepening
+            for depth in range(1, len(blanks_list)):
+                return self.minimax(game, self.search_depth)
 
         except SearchTimeout:
             pass  # Handle any actions required after timeout as needed
