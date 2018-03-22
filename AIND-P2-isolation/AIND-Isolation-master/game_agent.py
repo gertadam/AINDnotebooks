@@ -37,7 +37,7 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # go deep
+    # go deep - value the deepest tree
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
@@ -91,6 +91,8 @@ def custom_score_2(game, player):
     """
 
     # The four squares
+    # - value current locs in the square with most blanks
+
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
@@ -162,7 +164,12 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
 
-    # inside outside
+    # go deep - but differentiate
+    # inside from outside
+    # value the deepest tree-branch but
+    # if branches end at the same depth
+    # take the one inside
+
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
@@ -263,12 +270,10 @@ class MinimaxPlayer(IsolationPlayer):
 
         legal_list = game.get_legal_moves()
         if Verbose or Bugging:
-            print("legal:", legal_list)
+            print("MMlegal:", legal_list)
 
         if len(legal_list) == 0:
             return (-1, -1)
-        elif len(legal_list) == 1:
-            return legal_list[0]
 
         # Initialize the best move so that this function returns something
         # in case the search fails due to timeout
@@ -387,7 +392,7 @@ class MinimaxPlayer(IsolationPlayer):
     def time_test(self):
         if (self.time_left() < self.TIMER_THRESHOLD):
             if Verbose:
-                print("Timeout")
+                print("MMTimeout")
             raise SearchTimeout()
 
 
@@ -432,13 +437,10 @@ class AlphaBetaPlayer(IsolationPlayer):
         num_legal = len(legal_list)
 
         if Verbose or Bugging:
-            print("legal_list:", legal_list)
+            print("ABlegal_list:", legal_list)
 
         if num_legal == 0:
             return (-1, -1)
-
-        # elif num_legal == 1:
-        #     return legal_list[0]
 
         # init
         best_move = legal_list[0]
@@ -534,9 +536,9 @@ class AlphaBetaPlayer(IsolationPlayer):
             else:
                 return float("inf"), move_for_v  # by assumption 2
 
-        if depth == 0:  # or legal_moves == 1:
+        if depth == 0:
             if Verbose:
-                print("move#:", gameState.move_count)
+                print("ABmove#:", gameState.move_count, "Gamestate will be scored")
             return self.score(gameState, self), move_for_v
 
         for m in legal_list:
@@ -568,5 +570,5 @@ class AlphaBetaPlayer(IsolationPlayer):
     def time_test(self):
         if (self.time_left() < self.TIMER_THRESHOLD):
             if Verbose:
-                print("Timeout")
+                print("ABTimeout")
             raise SearchTimeout()
