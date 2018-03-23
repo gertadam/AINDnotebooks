@@ -88,47 +88,55 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-
     # The four squares
     # - value highest, game-states where the players
-    # current location is in the square (A, B, C, D)
-    # which has most blanks
-    # So when AB
+    # current location is in one of the squares (A, B, C, D)
+    # which has the most blanks.
     #
+    # move_num is used to differentiate
+    # when many squares contain the same num of blanks
 
+    global blanks_count
+
+    def count_in_squares(blank_loc, h, w, c_h, c_w):
+        bl_cnt = [0, 0, 0, 0]
+
+        if blank_loc[0] <= c_h - 1:
+            if blank_loc[1] <= c_w - 1:
+                bl_cnt[0] += 1
+            elif blank_loc[1] >= w - c_w:
+                bl_cnt[1] += 1
+        elif blank_loc[0] >= h - c_h:
+            if blank_loc[1] <= c_w - 1:
+                bl_cnt[2] += 1
+            elif blank_loc[1] >= w - c_w:
+                bl_cnt[3] += 1
+        return bl_cnt
+
+    # custom_score_2 main
     if game.is_loser(player):
         return float("-inf")
     elif game.is_winner(player):
         return float("inf")
 
-    cur_loc = game.get_player_location(player)
-
-    move_num = game.move_count
-
-    blanks_count = [0, 0, 0, 0]
     height = game.height
     width = game.width
     center_h = height // 2
     center_w = width // 2
 
-    # On the 8by8-Board Max is 16 blanks
-    blankslist = game.get_blank_spaces()
-    for loc in blankslist:
-        if loc[0] <= center_h - 1:
-            if loc[1] <= center_w - 1:
-                blanks_count[0] += 1
-            elif loc[1] >= width - center_w:
-                blanks_count[1] += 1
-        elif loc[0] >= height - center_h:
-            if loc[1] <= center_w - 1:
-                blanks_count[2] += 1
-            elif loc[1] >= width - center_w:
-                blanks_count[3] += 1
+    print(height, width, center_h, center_w)
+
+    # On the 8by8-Board - max blanks is 16
+    blanks_list = game.get_blank_spaces()
+    blanks_count = [[zipped_list = zip(a,b,c,d) for x in return_list]count_in_squares(loc, height, width, center_h, center_w) for loc in blanks_list]
 
     if Verbose or Bugging:
         print("blanks_count", blanks_count)
 
+    print(height, width, center_h, center_w, blanks_count)
+
     # We want to move to the area with most blanks
+    cur_loc = game.get_player_location(player)
     bl_multi = 0
     if cur_loc[0] <= center_h - 1:
         if cur_loc[1] <= center_w - 1:
@@ -141,7 +149,9 @@ def custom_score_2(game, player):
         elif cur_loc[1] >= width - center_w:
             bl_multi = blanks_count[3]
 
-    return float((move_num * 100) + (bl_multi * 10000))
+    move_num = game.move_count
+    value = bl_multi * 10000 + move_num * 100
+    return float(value)
 
 
 def custom_score_3(game, player):
@@ -176,7 +186,6 @@ def custom_score_3(game, player):
     # a higher value
     # than a curloc that has few children
     # inside the center of the board
-
 
     if game.is_loser(player):
         return float("-inf")
@@ -449,6 +458,9 @@ class AlphaBetaPlayer(IsolationPlayer):
             Board coordinates corresponding to a legal move; may return
             (-1, -1) if there are no available legal moves.
         """
+        global alpha
+        global beta
+
         self.time_left = time_left
         legal_list = game.get_legal_moves()
         num_legal = len(legal_list)
@@ -473,7 +485,7 @@ class AlphaBetaPlayer(IsolationPlayer):
                 return best_move
         return best_move
 
-    def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
+    def alphabeta(self, game, depth_at_start, alpha=float("-inf"), beta=float("inf")):
         """
         Implement depth-limited minimax search with alpha-beta
         pruning as described in the lectures.
@@ -519,17 +531,18 @@ class AlphaBetaPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
+
         self.time_test()
 
         # The top level nodes are a Max
         # initializations
         IsMax_value = True
 
-        max_branch, move = self.next_node(game, depth, alpha, beta, IsMax_value)
+        move_value, move = self.child_node(game, depth_at_start, alpha, beta, IsMax_value)
 
         return move
 
-    def next_node(self, gameState, depth, alpha, beta, IsMax_value):
+    def child_node(self, gameState, depth, alpha, beta, IsMax_value):
         self.time_test()
         legal_list = gameState.get_legal_moves()
         legal_moves = len(legal_list)
@@ -556,28 +569,34 @@ class AlphaBetaPlayer(IsolationPlayer):
         if depth == 0:
             if Verbose:
                 print("ABmove#:", gameState.move_count, "Gamestate will be scored")
-            return self.score(gameState, self), move_for_v
 
-        for m in legal_list:
-            node_value, node_move = self.next_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_value)
+            # score and move is out of sync here
+            # the score is for the gamestate
+            # whereas the move_for_v was meant as a return-var
+            # so it would be nonsensical til use
+            return self.score(gameState, self), _
 
-            if IsMax_value:
-                if node_value > v:
-                    v = node_value
-                    move_for_v = m
+        node_value, move_for_v = [self.child_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_value) for m in legal_list]
 
-                if (v >= beta):
-                    return v, move_for_v
-                alpha = max(alpha, v)
+        if IsMax_value:
+            if node_value > v:
+                v = node_value
+                # move_for_v is sent as return-var
+                # move_for_v = m
 
-            else:
-                if node_value < v:
-                    v = node_value
-                    move_for_v = m
+            if (v >= beta):
+                return v
+            alpha = max(alpha, v)
 
-                if (v <= alpha):
-                    return v, move_for_v
-                beta = min(beta, v)
+        else:
+            if node_value < v:
+                v = node_value
+                move_for_v = m
+
+            if (v <= alpha):
+                return v, move_for_v
+            beta = min(beta, v)
+
         return v, move_for_v
 
     def terminal_test(self, gamestate):
