@@ -124,16 +124,19 @@ def custom_score_2(game, player):
     center_h = height // 2
     center_w = width // 2
 
-    print(height, width, center_h, center_w)
+    if Verbose:
+        print(height, width, center_h, center_w)
 
     # On the 8by8-Board - max blanks is 16
     blanks_list = game.get_blank_spaces()
-    blanks_count = [[zipped_list = zip(a,b,c,d) for x in return_list]count_in_squares(loc, height, width, center_h, center_w) for loc in blanks_list]
+    blanks_count_lists = [count_in_squares(loc, height, width, center_h, center_w) for loc in blanks_list]
+    blanks_count = [sum(i) for i in zip(*blanks_count_lists)]
+    if Verbose:
+        print(height, width, center_h, center_w)
 
     if Verbose or Bugging:
         print("blanks_count", blanks_count)
-
-    print(height, width, center_h, center_w, blanks_count)
+        print(height, width, center_h, center_w)
 
     # We want to move to the area with most blanks
     cur_loc = game.get_player_location(player)
@@ -150,7 +153,7 @@ def custom_score_2(game, player):
             bl_multi = blanks_count[3]
 
     move_num = game.move_count
-    value = bl_multi * 10000 + move_num * 100
+    value = bl_multi * 100 + move_num * 10000
     return float(value)
 
 
@@ -567,35 +570,35 @@ class AlphaBetaPlayer(IsolationPlayer):
                 return float("inf"), move_for_v  # by assumption 2
 
         if depth == 0:
-            if Verbose:
-                print("ABmove#:", gameState.move_count, "Gamestate will be scored")
+            if Verbose or Bugging:
+                print("ABdepth=0 taken legal_list[0]", move_for_v, "ABmove_count:", gameState.move_count, "Gamestate will be scored")
 
-            # score and move is out of sync here
-            # the score is for the gamestate
+            # score and move is out of sync here - the score is for the gamestate
             # whereas the move_for_v was meant as a return-var
-            # so it would be nonsensical til use
-            return self.score(gameState, self), _
-
-        node_value, move_for_v = [self.child_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_value) for m in legal_list]
-
-        if IsMax_value:
-            if node_value > v:
-                v = node_value
-                # move_for_v is sent as return-var
-                # move_for_v = m
-
-            if (v >= beta):
-                return v
-            alpha = max(alpha, v)
+            # so it would be nonsensical til use - so be ware
+            return self.score(gameState, self), move_for_v
 
         else:
-            if node_value < v:
-                v = node_value
-                move_for_v = m
+            for m in legal_list:
+                node_value, node_move = self.child_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_value)
 
-            if (v <= alpha):
-                return v, move_for_v
-            beta = min(beta, v)
+                if IsMax_value:
+                    if node_value > v:
+                        v = node_value
+                        move_for_v = m
+
+                    if (v >= beta):
+                        return v, move_for_v
+                    alpha = max(alpha, v)
+
+                else:
+                    if node_value < v:
+                        v = node_value
+                        move_for_v = m
+
+                    if (v <= alpha):
+                        return v, move_for_v
+                    beta = min(beta, v)
 
         return v, move_for_v
 
