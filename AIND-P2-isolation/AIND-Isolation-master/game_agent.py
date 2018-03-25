@@ -3,6 +3,8 @@ Finish all TODO items in this file to complete the isolation project, then
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
+List_legal_child = False
+List_legal_bool = False
 Verbose = False
 Bugging = False
 
@@ -36,21 +38,21 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-
     # go deep - value the deepest tree-branch
     #
     # if two branches have the same move_num THEN
     # value the branch with most move_diff, that is
     # more legal moves at this game-state, than the opp
 
-    if game.is_loser(player):
-        return float("-inf")
-    elif game.is_winner(player):
-        return float("inf")
 
     # There is only one way to win -be the last one standing-
     # The deeper we have gone compared to other game-states
     #  - the better this game-state must be.
+    # - These eval func wil have to be done with:
+    # A) threads
+    # B) multiprocessing
+    # C) pooling
+    # D) numba
 
     move_num = game.move_count
     move_value = move_num * 100000
@@ -63,7 +65,17 @@ def custom_score(game, player):
 
     mov_diff_value = (my_moves - (1.7 * oppo_mov)) * 2000
 
-    return float(move_value + oppo_value + my_moves_value + mov_diff_value)
+    value_cs = move_value + oppo_value + my_moves_value + mov_diff_value
+
+    # Having debugged and found -in the endgame- the algorithm has
+    # to choose between many instances of "inf" which would mean
+    # -in effect- a random choice. Let us try this instead.
+    if game.is_loser(player):
+        return float(value_cs*-100)
+    elif game.is_winner(player):
+        return float(value_cs*100)
+
+    return float(value_cs)
 
 
 def custom_score_2(game, player):
@@ -114,11 +126,6 @@ def custom_score_2(game, player):
         return bl_cnt
 
     # custom_score_2 main
-    if game.is_loser(player):
-        return float("-inf")
-    elif game.is_winner(player):
-        return float("inf")
-
     height = game.height
     width = game.width
     center_h = height // 2
@@ -134,7 +141,7 @@ def custom_score_2(game, player):
     if Verbose:
         print(height, width, center_h, center_w)
 
-    if Verbose or Bugging:
+    if Verbose:
         print("blanks_count", blanks_count)
         print(height, width, center_h, center_w)
 
@@ -153,8 +160,17 @@ def custom_score_2(game, player):
             bl_multi = blanks_count[3]
 
     move_num = game.move_count
-    value = bl_multi * 100 + move_num * 10000
-    return float(value)
+    value_cs2 = bl_multi * 1000 + move_num * 10000
+
+    # Having debugged and found -in the endgame- the algorithm has
+    # to choose between many instances of "inf" which would mean
+    # -in effect- a random choice. Let us try this instead.
+    if game.is_loser(player):
+        return float(value_cs2*-100)
+    elif game.is_winner(player):
+        return float(value_cs2*100)
+
+    return float(value_cs2)
 
 
 def custom_score_3(game, player):
@@ -179,7 +195,6 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-
     # go deep - but differentiate
     # inside from outside
     # value the deepest tree-branch but if
@@ -189,12 +204,7 @@ def custom_score_3(game, player):
     # a higher value
     # than a curloc that has few children
     # inside the center of the board
-
-    if game.is_loser(player):
-        return float("-inf")
-    elif game.is_winner(player):
-        return float("inf")
-
+    #
     # what it takes to be a winner - have the "highest move number"
     move_num = game.move_count
 
@@ -214,18 +224,28 @@ def custom_score_3(game, player):
     legal_list = game.get_legal_moves()
     for in_out in legal_list:
         if 1 <= in_out[0] <= game.height - 2 and 1 <= in_out[1] <= game.width - 2:
-            in_area.append(in_out)  # could be 1-8
+            in_area.append(in_out)         # could be 1-8
         else:
-            outside_area.append(in_out)  # can only be 1-4
+            outside_area.append(in_out)    # can only be 1-4
 
     # the longer we play the game - the more -
     # we want to avoid having to risk getting "trapped" outside
     # out has -by far- the best score to start with -
     # after 15 turns - they switch - af 30 out goes negative
     out_val = len(outside_area) * (30 - move_num)  # *29, *28, *27, *26 ...
-    in_val = len(in_area) * move_num  # *  *1, *2, *3, *4 ...
+    in_val = len(in_area) * move_num               #  *1,  *2,  *3,  *4 ...
 
-    return float((move_num * 10000) + cl_value + out_val + (in_val * 20))
+    value_cs3 = (move_num * 10000) + cl_value + out_val + (in_val * 20)
+
+    # Having debugged and found -in the endgame- the algorithm has
+    # to choose between many instances of "inf" which would mean
+    # -in effect- a random choice. Let us try this instead.
+    if game.is_loser(player):
+        return float(value_cs3*-100)
+    elif game.is_winner(player):
+        return float(value_cs3*100)
+
+    return float(value_cs3)
 
 
 class IsolationPlayer:
@@ -296,7 +316,7 @@ class MinimaxPlayer(IsolationPlayer):
 
         legal_list = game.get_legal_moves()
         if Verbose or Bugging:
-            print("MMlegal:", legal_list)
+            print("MMlegal:", legal_list, "\n", "\n")
 
         if len(legal_list) == 0:
             return (-1, -1)
@@ -461,21 +481,20 @@ class AlphaBetaPlayer(IsolationPlayer):
             Board coordinates corresponding to a legal move; may return
             (-1, -1) if there are no available legal moves.
         """
-        global alpha
-        global beta
-
         self.time_left = time_left
         legal_list = game.get_legal_moves()
         num_legal = len(legal_list)
 
-        if Verbose or Bugging:
-            print("ABlegal_list:", legal_list)
+        if Verbose or Bugging or List_legal_bool:
+            print("ABlegal_list:", legal_list, "\n", "\n")
 
         if num_legal == 0:
             return (-1, -1)
 
         # init
         best_move = legal_list[0]
+        if Verbose or Bugging:
+            print("debug - best_move = legal_list[0]:", legal_list[0], "\n", "\n")
 
         blanks_list = game.get_blank_spaces()
 
@@ -534,71 +553,102 @@ class AlphaBetaPlayer(IsolationPlayer):
                 each helper function or else your agent will timeout during
                 testing.
         """
-
         self.time_test()
 
         # The top level nodes are a Max
         # initializations
         IsMax_value = True
+        if Verbose or Bugging:
+            print("before child_ alpha:", alpha, "beta:", beta, "\n", "\n")
 
         move_value, move = self.child_node(game, depth_at_start, alpha, beta, IsMax_value)
-
+        if Verbose or Bugging:
+            print("after child_ alpha:", alpha, "beta:", beta, "value:", move_value, "move:", move, "\n", "\n")
         return move
 
-    def child_node(self, gameState, depth, alpha, beta, IsMax_value):
-        self.time_test()
-        legal_list = gameState.get_legal_moves()
-        legal_moves = len(legal_list)
-
-        if legal_moves == 0:
-            if IsMax_value:
-                return float("-inf"), (-1, -1)
-            else:
-                return float("inf"), (-1, -1)
-        # init
-        move_for_v = legal_list[0]
-
-        if IsMax_value:
-            v = float("-inf")
-        else:
-            v = float("inf")
+    def child_node(self, gameState, depth, alpha, beta, IsMax_bool):
 
         if self.terminal_test(gameState):
-            if IsMax_value:
-                return float("-inf"), move_for_v  # by assumption 2
-            else:
-                return float("inf"), move_for_v  # by assumption 2
-
-        if depth == 0:
             if Verbose or Bugging:
-                print("ABdepth=0 taken legal_list[0]", move_for_v, "ABmove_count:", gameState.move_count, "Gamestate will be scored")
+                print("terminal_test:", "depth:", depth, "alpha:",
+                      alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
 
-            # score and move is out of sync here - the score is for the gamestate
-            # whereas the move_for_v was meant as a return-var
-            # so it would be nonsensical til use - so be ware
-            return self.score(gameState, self), move_for_v
-
+            if IsMax_bool:
+                if Verbose or Bugging:
+                    print("IsMax_value-return float(-inf):", "dpth:", depth,
+                          "alpha:", alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
+                return float("-inf"), (-1, -1)  # by assumption 2
+            else:
+                if Verbose or Bugging:
+                    print("NOT IsMax-return float(inf):", "dpth:", depth,
+                          "alpha:", alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
+                return float("inf"), (-1, -1)   # by assumption 2
         else:
-            for m in legal_list:
-                node_value, node_move = self.child_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_value)
+            if Verbose or Bugging:
+                print("NOTterminal:", "depth:", depth, "alpha:", alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
 
-                if IsMax_value:
-                    if node_value > v:
-                        v = node_value
-                        move_for_v = m
+            self.time_test()
+            legal_list = gameState.get_legal_moves()
+            if Verbose or Bugging or List_legal_child:
+                print("Child-node AB-legal_list", legal_list)
+            # init
+            move_for_v = legal_list[0]
 
-                    if (v >= beta):
-                        return v, move_for_v
-                    alpha = max(alpha, v)
+            # This must be the same as calling self.terminal.test
+            # legal_moves = len(legal_list)
+            # if legal_moves == 0:
+            #     if IsMax_value:
+            #         return float("-inf"), (-1, -1)
+            #     else:
+            #         return float("inf"), (-1, -1)
 
-                else:
-                    if node_value < v:
-                        v = node_value
-                        move_for_v = m
+            # init value
+            if IsMax_bool:
+                v = float("-inf")
+            else:
+                v = float("inf")
 
-                    if (v <= alpha):
-                        return v, move_for_v
-                    beta = min(beta, v)
+            # Having debugged and found -especially in the endgame-
+            # the algorithm has to choose between many instances of
+            # "inf" which would mean -in effect- a random choice.
+            # Unfortunately udacity submit does not allow any changes.
+            if depth == 0:
+                if Verbose or Bugging:
+                    print("ABdepth=0 taken legal_list[0]", move_for_v, "ABmove_count:",
+                          gameState.move_count, "Gamestate will be scored", "\n", "\n")
+
+                # score and move is out of sync here - the score is for the gamestate
+                # whereas the move_for_v was meant as a return-var
+                # so it would be nonsensical til use - so be ware
+                return self.score(gameState, self), move_for_v
+
+            else:           # depth not 0
+                for m in legal_list:
+                    node_value, node_move = self.child_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_bool)
+                    if Verbose or Bugging:
+                        print("Aft child call node_value:", node_value, "node_move", node_move,
+                              "move_for_v", move_for_v, "ABmove_count:", gameState.move_count,
+                              "Gamestate will be scored", "\n", "\n")
+
+                    if IsMax_bool:
+                        if node_value > v:
+                            v = node_value
+                            move_for_v = m
+
+                        if (v >= beta):
+                            return v, move_for_v
+                        alpha = max(alpha, v)
+
+                    else:
+                        if node_value < v:
+                            v = node_value
+                            move_for_v = m
+
+                        if (v <= alpha):
+                            return v, move_for_v
+                        beta = min(beta, v)
+                if Verbose or Bugging:
+                    print("alpha:", alpha, "beta:", beta, "value:", node_value, "move:", node_move, "\n", "\n")
 
         return v, move_for_v
 

@@ -18,6 +18,7 @@ import timeit
 TIME_LIMIT_MILLIS = 150
 
 Verbose = False
+Boxes   = True
 
 class IsolationTest(unittest.TestCase):
     """Unit tests for isolation agents"""
@@ -26,7 +27,7 @@ class IsolationTest(unittest.TestCase):
         reload(game_agent)
         self.player1 = game_agent.MinimaxPlayer()
         self.player2 = game_agent.MinimaxPlayer()
-        self.game = isolation.Board(self.player1, self.player2, 8, 8)
+        self.game = isolation.Board(self.player1, self.player2, 20, 20)
 
     def _test_minimax(self):
         print("---------- testing min max player ----------")
@@ -34,51 +35,124 @@ class IsolationTest(unittest.TestCase):
         self.player2 = game_agent.MinimaxPlayer()
         
         for i in range(75):
-            move = self.game.active_player.get_move(self.game, time_left = lambda : 100000   )
+            move = self.game.active_player.get_move(self.game, time_left = lambda : 100000)
             print(move)
             self.game.apply_move(move)
             print(self.game.print_board())
         
         
     def test_alphabeta(self):
-
-        lost = [0,0]
-
-        for y in range(100):
-            print("---------- testing alpha beta player (",y,")----------")
-            self.player1 = game_agent.AlphaBetaPlayer(score_fn=custom_score_2)
-            self.player2 = game_agent.AlphaBetaPlayer(score_fn=improved_score)
-            self.game = isolation.Board(self.player1, self.player2, 8, 8)
+        #
+        global lost
+        global player_lost
+        MATCHES = 5
+        #
+        def play_match(first, second):
+            print("*************************** *************************** *************************** ", "\n")
+            print(" --------------- ", first, " versus ", second, " ---------------- ", "\n")
+            print("\n")
+            print("---------------- testing alpha beta player(", num_matches, ") -------------------------", "\n")
+            print("*************************** *************************** *************************** ", "\n")
+            self.player1 = game_agent.AlphaBetaPlayer(first)
+            self.player2 = game_agent.AlphaBetaPlayer(second)
+            self.game = isolation.Board(self.player1, self.player2, 16, 15)
 
             time_millis = lambda: 1000 * timeit.default_timer()
 
-            if Verbose:
+            if Verbose or Boxes:
                 print(self.game.print_board())
-            move = 0, 0
 
             for i in range(800):
                 move_start = time_millis()
-                time_left = lambda : TIME_LIMIT_MILLIS - (time_millis() - move_start)
+                time_left = lambda: TIME_LIMIT_MILLIS - (time_millis() - move_start)
 
-                move = self.game.active_player.get_move(self.game, time_left )
+                move = self.game.active_player.get_move(self.game, time_left)
                 if self.game.is_loser(self.game.active_player):
                     if self.game.active_player == self.player1:
                         lost[0] += 1
                     else:
                         lost[1] += 1
-                    print(lost)
-
-                self.game.apply_move(move)
-                if Verbose:
-                    print("i:", i, "_", move)
-                    print(self.game.print_board())
-                if move == (-1, -1):
-                    print("dead-end ")
-                    move = 0, 0
+                    print("test_game.. lost:", lost)
+                    # if move == (-1, -1): must be the same as "is_loser"
+                    print("*************************** *************************** ", "\n")
+                    print("                   dead-end reached ", "\n")
+                    print("*************************** *************************** ", "\n")
                     break
+                else:
+                    self.game.apply_move(move)
+                    if Verbose or Boxes:
+                        print("i:", i, "_", move, "\n")
+                        print(self.game.print_board(), "\n")
+            for x in range(2):
+                print ("lost:", lost[x], "\n")
+            print("*************************** *************************** *************************** ")
+            print("player_lost:", player_lost)
+            print("*************************** *************************** *************************** ", "\n")
 
-        for x in range(2):
-            print ("lost:",lost[x])
+        def play_Greedy(first):
+            print("*************************** *************************** *************************** ", "\n")
+            print(" --------------- ", first, " versus improved-Greedy ---------------- ", "\n")
+            print("\n")
+            print("---------------- testing alpha beta player(", num_matches, ") -------------------------", "\n")
+            print("*************************** *************************** *************************** ", "\n")
+            self.player1 = game_agent.AlphaBetaPlayer(first)
+            self.player2 = GreedyPlayer()
+            self.game = isolation.Board(self.player1, self.player2, 16, 15)
+
+            time_millis = lambda: 1000 * timeit.default_timer()
+
+            if Verbose or Boxes:
+                print(self.game.print_board())
+
+            for i in range(800):
+                move_start = time_millis()
+                time_left = lambda: TIME_LIMIT_MILLIS - (time_millis() - move_start)
+
+                move = self.game.active_player.get_move(self.game, time_left)
+                if self.game.is_loser(self.game.active_player):
+                    if self.game.active_player == self.player1:
+                        lost[0] += 1
+                    else:
+                        lost[1] += 1
+                    print("test_game.. lost:", lost)
+                    # if move == (-1, -1): must be the same as "is_loser"
+                    print("*************************** *************************** ", "\n")
+                    print("                   dead-end reached ", "\n")
+                    print("*************************** *************************** ", "\n")
+                    break
+                else:
+                    self.game.apply_move(move)
+                    if Verbose or Boxes:
+                        print("i:", i, "_", move, "\n")
+                        print(self.game.print_board(), "\n")
+            for x in range(2):
+                print ("lost:", lost[x], "\n")
+            print("*************************** *************************** *************************** ")
+            print("player_lost:", player_lost)
+            print("*************************** *************************** *************************** ", "\n")
+
+        # Main
+        score_fn_list = ["score_fn=custom_score", "score_fn=custom_score_2", "score_fn=custom_score_3", "score_fn=improved_score"]
+        lost = [0, 0]
+        player_lost = [0, 0, 0, 0]
+        for idx, first in enumerate(score_fn_list):
+            for second in score_fn_list:
+                # if not (first == second):  # Eight matches (incl. against yourself) - 4 as first - 4 as second
+                for num_matches in range(MATCHES):
+                    play_match(first, second)
+                player_lost[idx] += lost[0]
+                lost = [0, 0]
+            for num_matches in range(MATCHES):
+                play_Greedy(first)
+            player_lost[idx] += lost[0]
+            lost = [0, 0]
+
+        # iteratools
+        # combinations score_fn_list * score_fn_list
+        #
+        # list comprehensions
+        # resultlist=[[[play_match(first, second) for num_matches in range(100)] (if not (first == second)) for second in scorelist] for first in score_fn_list]
+
 
 if __name__ == '__main__':
     unittest.main()
