@@ -14,11 +14,23 @@ import isolation
 import unittest
 import timeit
 
+# gert adam test_gam_agent.py
+
+#
+# iteratools
+# combinations score_fn_list * score_fn_list
+#
+# list comprehensions
+# resultlist=[[[play_match(first, second) for num_matches in range(100)]
+#               (if not (first == second)) for second in scorelist] for first in score_fn_list]
+
 
 TIME_LIMIT_MILLIS = 150
 
 Verbose = False
-Boxes   = True
+Boxes   = False
+height  = 8
+width   = 8
 
 class IsolationTest(unittest.TestCase):
     """Unit tests for isolation agents"""
@@ -27,7 +39,7 @@ class IsolationTest(unittest.TestCase):
         reload(game_agent)
         self.player1 = game_agent.MinimaxPlayer()
         self.player2 = game_agent.MinimaxPlayer()
-        self.game = isolation.Board(self.player1, self.player2, 20, 20)
+        self.game = isolation.Board(self.player1, self.player2, height, width)
 
     def _test_minimax(self):
         print("---------- testing min max player ----------")
@@ -45,7 +57,7 @@ class IsolationTest(unittest.TestCase):
         #
         global lost
         global player_lost
-        MATCHES = 5
+        MATCHES = 25
         #
         def play_match(first, second):
             print("*************************** *************************** *************************** ", "\n")
@@ -55,7 +67,7 @@ class IsolationTest(unittest.TestCase):
             print("*************************** *************************** *************************** ", "\n")
             self.player1 = game_agent.AlphaBetaPlayer(first)
             self.player2 = game_agent.AlphaBetaPlayer(second)
-            self.game = isolation.Board(self.player1, self.player2, 16, 15)
+            self.game = isolation.Board(self.player1, self.player2, height, width)
 
             time_millis = lambda: 1000 * timeit.default_timer()
 
@@ -97,7 +109,7 @@ class IsolationTest(unittest.TestCase):
             print("*************************** *************************** *************************** ", "\n")
             self.player1 = game_agent.AlphaBetaPlayer(first)
             self.player2 = GreedyPlayer()
-            self.game = isolation.Board(self.player1, self.player2, 16, 15)
+            self.game = isolation.Board(self.player1, self.player2, height, width)
 
             time_millis = lambda: 1000 * timeit.default_timer()
 
@@ -137,7 +149,11 @@ class IsolationTest(unittest.TestCase):
         player_lost = [0, 0, 0, 0]
         for idx, first in enumerate(score_fn_list):
             for second in score_fn_list:
-                # if not (first == second):  # Eight matches (incl. against yourself) - 4 as first - 4 as second
+
+                # if not (first == second):     # matches all (incl. against yourself)
+                                                # x matches as first - x as second
+                                                # first plays all from above + greedy with improved eval func
+
                 for num_matches in range(MATCHES):
                     play_match(first, second)
                 player_lost[idx] += lost[0]
@@ -146,13 +162,6 @@ class IsolationTest(unittest.TestCase):
                 play_Greedy(first)
             player_lost[idx] += lost[0]
             lost = [0, 0]
-
-        # iteratools
-        # combinations score_fn_list * score_fn_list
-        #
-        # list comprehensions
-        # resultlist=[[[play_match(first, second) for num_matches in range(100)] (if not (first == second)) for second in scorelist] for first in score_fn_list]
-
 
 if __name__ == '__main__':
     unittest.main()
