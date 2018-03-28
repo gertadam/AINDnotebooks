@@ -3,6 +3,7 @@ Finish all TODO items in this file to complete the isolation project, then
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
+P_iterative = False
 List_legal_child = False
 List_legal_bool = False
 Verbose = False
@@ -44,7 +45,6 @@ def custom_score(game, player):
     # value the branch with most move_diff, that is
     # more legal moves at this game-state, than the opp
 
-
     # There is only one way to win -be the last one standing-
     # The deeper we have gone compared to other game-states
     #  - the better this game-state must be.
@@ -55,10 +55,10 @@ def custom_score(game, player):
     # D) numba
 
     move_num = game.move_count
-    move_value = move_num * 100000
+    move_value = move_num * (10 ^ 6)
 
     oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
-    oppo_value = (10 - oppo_mov) * 100
+    oppo_value = (10 - oppo_mov) * (10 ^ 5)
 
     my_moves = len(game.get_legal_moves(player))
     my_moves_value = my_moves * move_num
@@ -71,9 +71,9 @@ def custom_score(game, player):
     # to choose between many instances of "inf" which would mean
     # -in effect- a random choice. Let us try this instead.
     if game.is_loser(player):
-        return float(value_cs*-100)
+        return float(value_cs * -100)
     elif game.is_winner(player):
-        return float(value_cs*100)
+        return float(value_cs * 100)
 
     return float(value_cs)
 
@@ -107,70 +107,84 @@ def custom_score_2(game, player):
     #
     # move_num is used to differentiate
     # when many squares contain the same num of blanks
-
-    global blanks_count
-
-    def count_in_squares(blank_loc, h, w, c_h, c_w):
-        bl_cnt = [0, 0, 0, 0]
-
-        if blank_loc[0] <= c_h - 1:
-            if blank_loc[1] <= c_w - 1:
-                bl_cnt[0] += 1
-            elif blank_loc[1] >= w - c_w:
-                bl_cnt[1] += 1
-        elif blank_loc[0] >= h - c_h:
-            if blank_loc[1] <= c_w - 1:
-                bl_cnt[2] += 1
-            elif blank_loc[1] >= w - c_w:
-                bl_cnt[3] += 1
-        return bl_cnt
-
-    # custom_score_2 main
-    height = game.height
-    width = game.width
-    center_h = height // 2
-    center_w = width // 2
-
-    if Verbose:
-        print(height, width, center_h, center_w)
-
-    # On the 8by8-Board - max blanks is 16
-    blanks_list = game.get_blank_spaces()
-    blanks_count_lists = [count_in_squares(loc, height, width, center_h, center_w) for loc in blanks_list]
-    blanks_count = [sum(i) for i in zip(*blanks_count_lists)]
-    if Verbose:
-        print(height, width, center_h, center_w)
-
-    if Verbose:
-        print("blanks_count", blanks_count)
-        print(height, width, center_h, center_w)
-
-    # We want to move to the area with most blanks
-    cur_loc = game.get_player_location(player)
-    bl_multi = 0
-    if cur_loc[0] <= center_h - 1:
-        if cur_loc[1] <= center_w - 1:
-            bl_multi = blanks_count[0]
-        elif cur_loc[1] >= width - center_w:
-            bl_multi = blanks_count[1]
-    elif cur_loc[0] >= height - center_h:
-        if cur_loc[1] <= center_w - 1:
-            bl_multi = blanks_count[2]
-        elif cur_loc[1] >= width - center_w:
-            bl_multi = blanks_count[3]
-
+    #
+    # global blanks_count
+    #
+    # def count_in_squares(blank_loc, h, w, c_h, c_w):
+    #     bl_cnt = [0, 0, 0, 0]
+    #
+    #     if blank_loc[0] <= c_h - 1:
+    #         if blank_loc[1] <= c_w - 1:
+    #             bl_cnt[0] += 1
+    #         elif blank_loc[1] >= w - c_w:
+    #             bl_cnt[1] += 1
+    #     elif blank_loc[0] >= h - c_h:
+    #         if blank_loc[1] <= c_w - 1:
+    #             bl_cnt[2] += 1
+    #         elif blank_loc[1] >= w - c_w:
+    #             bl_cnt[3] += 1
+    #     return bl_cnt
+    #
+    # # custom_score_2 main
+    # height = game.height
+    # width = game.width
+    # center_h = height // 2
+    # center_w = width // 2
+    #
+    # if Verbose:
+    #     print(height, width, center_h, center_w)
+    #
+    # # On the 8by8-Board - max blanks is 16
+    # blanks_list = game.get_blank_spaces()
+    # blanks_count_lists = [count_in_squares(loc, height, width, center_h, center_w) for loc in blanks_list]
+    # blanks_count = [sum(i) for i in zip(*blanks_count_lists)]
+    # if Verbose:
+    #     print(height, width, center_h, center_w)
+    #
+    # if Verbose:
+    #     print("blanks_count", blanks_count)
+    #     print(height, width, center_h, center_w)
+    #
+    # # We want to move to the area with most blanks
+    # cur_loc = game.get_player_location(player)
+    # bl_multi = 0
+    # if cur_loc[0] <= center_h - 1:
+    #     if cur_loc[1] <= center_w - 1:
+    #         bl_multi = blanks_count[0]
+    #     elif cur_loc[1] >= width - center_w:
+    #         bl_multi = blanks_count[1]
+    # elif cur_loc[0] >= height - center_h:
+    #     if cur_loc[1] <= center_w - 1:
+    #         bl_multi = blanks_count[2]
+    #     elif cur_loc[1] >= width - center_w:
+    #         bl_multi = blanks_count[3]
+    #
+    # move_num = game.move_count
+    # value_cs2 = bl_multi * 1000 + move_num * 10000
+    #
+    # # Having debugged and found -in the endgame- the algorithm has
+    # # to choose between many instances of "inf" which would mean
+    # # -in effect- a random choice. Let us try this instead.
+    # if game.is_loser(player):
+    #     return float(value_cs2*-100)
+    # elif game.is_winner(player):
+    #     return float(value_cs2*100)
+    #
+    # return float(value_cs2)
+    #
     move_num = game.move_count
-    value_cs2 = bl_multi * 1000 + move_num * 10000
-
-    # Having debugged and found -in the endgame- the algorithm has
-    # to choose between many instances of "inf" which would mean
-    # -in effect- a random choice. Let us try this instead.
+    move_value = move_num * (10 ^ 6)
+    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
+    oppo_value = (10 - oppo_mov) * (10 ^ 6)
+    my_moves = len(game.get_legal_moves(player))
+    my_moves_value = my_moves * move_num
+    mov_diff_value = (my_moves - (1.7 * oppo_mov)) * 2000
+    value_cs = move_value + oppo_value + my_moves_value + mov_diff_value
     if game.is_loser(player):
-        return float(value_cs2*-100)
+        return float(value_cs * -100)
     elif game.is_winner(player):
-        return float(value_cs2*100)
-
-    return float(value_cs2)
+        return float(value_cs * 100)
+    return float(value_cs)
 
 
 def custom_score_3(game, player):
@@ -206,46 +220,62 @@ def custom_score_3(game, player):
     # inside the center of the board
     #
     # what it takes to be a winner - have the "highest move number"
+    #
+    # move_num = game.move_count
+    #
+    # cur_loc = game.get_player_location(player)
+    # if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
+    #     cl_value = move_num * 1000
+    # else:
+    #     cl_value = move_num * -1000
+    #
+    # # Is our next move going to take us to the Board.edge thereby
+    # # reducing the number of legal moves available to us.
+    # # In the opening-moves, it is not a problem that we move along
+    # # the edge, but it increasingly becomes a challenge.
+    # in_area = []
+    # outside_area = []
+    # # how many next moves are in the center
+    # legal_list = game.get_legal_moves()
+    # for in_out in legal_list:
+    #     if 1 <= in_out[0] <= game.height - 2 and 1 <= in_out[1] <= game.width - 2:
+    #         in_area.append(in_out)         # could be 1-8
+    #     else:
+    #         outside_area.append(in_out)    # can only be 1-4
+    #
+    # # the longer we play the game - the more -
+    # # we want to avoid having to risk getting "trapped" outside
+    # # out has -by far- the best score to start with -
+    # # after 15 turns - they switch - af 30 out goes negative
+    # out_val = len(outside_area) * (30 - move_num)  # *29, *28, *27, *26 ...
+    # in_val = len(in_area) * move_num               #  *1,  *2,  *3,  *4 ...
+    #
+    # value_cs3 = (move_num * 10000) + cl_value + out_val + (in_val * 20)
+    #
+    # # Having debugged and found -in the endgame- the algorithm has
+    # # to choose between many instances of "inf" which would mean
+    # # -in effect- a random choice. Let us try this instead.
+    # if game.is_loser(player):
+    #     return float(value_cs3*-100)
+    # elif game.is_winner(player):
+    #     return float(value_cs3*100)
+    #
+    # return float(value_cs3)
+    #
+
     move_num = game.move_count
-
-    cur_loc = game.get_player_location(player)
-    if 1 <= cur_loc[0] <= game.height - 2 and 1 <= cur_loc[1] <= game.width - 2:
-        cl_value = move_num * 1000
-    else:
-        cl_value = move_num * -1000
-
-    # Is our next move going to take us to the Board.edge thereby
-    # reducing the number of legal moves available to us.
-    # In the opening-moves, it is not a problem that we move along
-    # the edge, but it increasingly becomes a challenge.
-    in_area = []
-    outside_area = []
-    # how many next moves are in the center
-    legal_list = game.get_legal_moves()
-    for in_out in legal_list:
-        if 1 <= in_out[0] <= game.height - 2 and 1 <= in_out[1] <= game.width - 2:
-            in_area.append(in_out)         # could be 1-8
-        else:
-            outside_area.append(in_out)    # can only be 1-4
-
-    # the longer we play the game - the more -
-    # we want to avoid having to risk getting "trapped" outside
-    # out has -by far- the best score to start with -
-    # after 15 turns - they switch - af 30 out goes negative
-    out_val = len(outside_area) * (30 - move_num)  # *29, *28, *27, *26 ...
-    in_val = len(in_area) * move_num               #  *1,  *2,  *3,  *4 ...
-
-    value_cs3 = (move_num * 10000) + cl_value + out_val + (in_val * 20)
-
-    # Having debugged and found -in the endgame- the algorithm has
-    # to choose between many instances of "inf" which would mean
-    # -in effect- a random choice. Let us try this instead.
+    move_value = move_num * (10 ^ 6)
+    oppo_mov = len(game.get_legal_moves(game.get_opponent(player)))
+    oppo_value = (10 - oppo_mov) * (10 ^ 7)
+    my_moves = len(game.get_legal_moves(player))
+    my_moves_value = my_moves * move_num
+    mov_diff_value = (my_moves - (1.7 * oppo_mov)) * 2000
+    value_cs = move_value + oppo_value + my_moves_value + mov_diff_value
     if game.is_loser(player):
-        return float(value_cs3*-100)
+        return float(value_cs * -100)
     elif game.is_winner(player):
-        return float(value_cs3*100)
-
-    return float(value_cs3)
+        return float(value_cs * 100)
+    return float(value_cs)
 
 
 class IsolationPlayer:
@@ -501,6 +531,8 @@ class AlphaBetaPlayer(IsolationPlayer):
         # iterative deepening
         for depth in range(1, len(blanks_list)):
             try:
+                if P_iterative:
+                    print("iterative_deep: ", depth)
                 best_move = self.alphabeta(game, depth)
 
             except SearchTimeout:
@@ -570,19 +602,19 @@ class AlphaBetaPlayer(IsolationPlayer):
 
         if self.terminal_test(gameState):
             if Verbose or Bugging:
-                print("terminal_test:", "depth:", depth, "alpha:",
-                      alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
+                print("terminal_test:", "depth:", depth, "alpha:", alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n",
+                      "\n")
 
             if IsMax_bool:
                 if Verbose or Bugging:
-                    print("IsMax_value-return float(-inf):", "dpth:", depth,
-                          "alpha:", alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
+                    print("IsMax_value-return float(-inf):", "dpth:", depth, "alpha:", alpha, "beta:", beta, "IsMax:",
+                          IsMax_bool, "\n", "\n")
                 return float("-inf"), (-1, -1)  # by assumption 2
             else:
                 if Verbose or Bugging:
-                    print("NOT IsMax-return float(inf):", "dpth:", depth,
-                          "alpha:", alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
-                return float("inf"), (-1, -1)   # by assumption 2
+                    print("NOT IsMax-return float(inf):", "dpth:", depth, "alpha:", alpha, "beta:", beta, "IsMax:",
+                          IsMax_bool, "\n", "\n")
+                return float("inf"), (-1, -1)  # by assumption 2
         else:
             if Verbose or Bugging:
                 print("NOTterminal:", "depth:", depth, "alpha:", alpha, "beta:", beta, "IsMax:", IsMax_bool, "\n", "\n")
@@ -614,21 +646,21 @@ class AlphaBetaPlayer(IsolationPlayer):
             # Unfortunately udacity submit does not allow any changes.
             if depth == 0:
                 if Verbose or Bugging:
-                    print("ABdepth=0 taken legal_list[0]", move_for_v, "ABmove_count:",
-                          gameState.move_count, "Gamestate will be scored", "\n", "\n")
+                    print("ABdepth=0 taken legal_list[0]", move_for_v, "ABmove_count:", gameState.move_count,
+                          "Gamestate will be scored", "\n", "\n")
 
                 # score and move is out of sync here - the score is for the gamestate
                 # whereas the move_for_v was meant as a return-var
                 # so it would be nonsensical til use - so be ware
                 return self.score(gameState, self), move_for_v
 
-            else:           # depth not 0
+            else:  # depth not 0
                 for m in legal_list:
-                    node_value, node_move = self.child_node(gameState.forecast_move(m), depth - 1, alpha, beta, not IsMax_bool)
+                    node_value, node_move = self.child_node(gameState.forecast_move(m), depth - 1, alpha, beta,
+                                                            not IsMax_bool)
                     if Verbose or Bugging:
-                        print("Aft child call node_value:", node_value, "node_move", node_move,
-                              "move_for_v", move_for_v, "ABmove_count:", gameState.move_count,
-                              "Gamestate will be scored", "\n", "\n")
+                        print("Aft child call node_value:", node_value, "node_move", node_move, "move_for_v",
+                              move_for_v, "ABmove_count:", gameState.move_count, "Gamestate will be scored", "\n", "\n")
 
                     if IsMax_bool:
                         if node_value > v:
