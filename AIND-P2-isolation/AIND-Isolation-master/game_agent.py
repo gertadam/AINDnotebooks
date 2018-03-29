@@ -483,8 +483,6 @@ class AlphaBetaPlayer(IsolationPlayer):
         # iterative deepening
         for depth in range(1, len(blanks_list)):
             try:
-                if P_iterative:
-                    print("iterative_deep: ", depth)
                 best_move = self.alphabeta(game, depth)
 
             except SearchTimeout:
