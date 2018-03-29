@@ -25,7 +25,7 @@ import timeit
 #               (if not (first == second)) for second in scorelist] for first in score_fn_list]
 
 
-TIME_LIMIT_MILLIS = 300
+TIME_LIMIT_MILLIS = 150
 
 Verbose = False
 Boxes   = False
@@ -57,7 +57,7 @@ class IsolationTest(unittest.TestCase):
         #
         global lost
         global player_lost
-        MATCHES = 22
+        MATCHES = 11
         #
         def play_match(first, second):
             print("*************************** *************************** *************************** ", "\n")
