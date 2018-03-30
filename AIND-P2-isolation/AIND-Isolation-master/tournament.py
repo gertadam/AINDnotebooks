@@ -21,8 +21,8 @@ from isolation import Board
 from sample_players import (GreedyPlayer, RandomPlayer, open_move_score, improved_score, center_score)
 from game_agent import (MinimaxPlayer, AlphaBetaPlayer, custom_score, custom_score_2, custom_score_3)
 
-NUM_MATCHES = 25  # number of matches against each opponent
-TIME_LIMIT = 1500  # number of milliseconds before timeout
+NUM_MATCHES = 75  # number of matches against each opponent
+TIME_LIMIT = 150  # number of milliseconds before timeout
 
 DESCRIPTION = """
 This script evaluates the performance of the custom_score evaluation
@@ -98,13 +98,12 @@ def play_matches(cpu_agents, test_agents, num_matches):
         ['{:^13}'.format("{:.1f}%".format(100 * total_wins[x[1].player] / total_matches)) for x in
          enumerate(test_agents)]))
     if total_timeouts:
-        print(("\nThere were {} timeouts during the tournament -- make sure " + "your agent handles search "
-                                                                                "timeout correctly, and consider " +
-               "increasing the timeout margin for your agent.\n").format(
-            total_timeouts))
+        print(("\nThere were {} timeouts during the tournament -- make sure " +
+               "your agent handles search timeout correctly, and consider " +
+               "increasing the timeout margin for your agent.\n").format(total_timeouts))
     if total_forfeits:
-        print(("\nYour agents forfeited {} games while there were still " + "legal moves available to play.\n").format(
-            total_forfeits))
+        print(("\nYour agents forfeited {} games while there were still " +
+               "legal moves available to play.\n").format(total_forfeits))
 
 
 def main():
